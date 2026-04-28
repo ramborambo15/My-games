@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wing Hop</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212b;
+      --muted: #526170;
+      --panel: rgba(255, 255, 255, 0.78);
+      --panel-solid: #fffaf0;
+      --accent: #e95c36;
+      --accent-dark: #b83d23;
+      --sky-top: #86d7ff;
+      --sky-mid: #d8f4ff;
+      --grass: #3fb96f;
+      --earth: #8b5a35;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100%;
+      overflow: hidden;
+      background: linear-gradient(180deg, var(--sky-top), var(--sky-mid) 72%, #95e07a 72%, #5dc66d);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+    }
+
+    .shell {
+      width: min(100vw, 960px);
+      height: min(100vh, 720px);
+      min-height: 560px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .game-wrap {
+      position: relative;
+      width: min(100%, 430px);
+      aspect-ratio: 9 / 16;
+      max-height: calc(100vh - 36px);
+      border: 3px solid rgba(23, 33, 43, 0.22);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #9bddff;
+      box-shadow: 0 18px 50px rgba(30, 54, 70, 0.25);
+      touch-action: manipulation;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: auto;
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .score-card,
+    .status-card {
+      background: var(--panel);
+      border: 1px solid rgba(23, 33, 43, 0.12);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(24, 52, 65, 0.14);
+      backdrop-filter: blur(8px);
+    }
+
+    .score-card {
+      min-width: 82px;
+      padding: 8px 10px;
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .score-value {
+      font-variant-numeric: tabular-nums;
+      font-size: 30px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .status-card {
+      padding: 8px 10px;
+      text-align: right;
+      max-width: 185px;
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .center-panel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(calc(100% - 40px), 330px);
+      transform: translate(-50%, -50%);
+      background: var(--panel-solid);
+      border: 2px solid rgba(23, 33, 43, 0.16);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 18px 40px rgba(33, 51, 60, 0.24);
+      pointer-events: auto;
+      text-align: center;
+    }
+
+    .center-panel[hidden] {
+      display: none;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .message {
+      margin: 8px 0 14px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 650;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .stat {
+      border: 1px solid rgba(23, 33, 43, 0.12);
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 24px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.05;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      font: inherit;
+      font-weight: 900;
+      min-height: 42px;
+      padding: 0 16px;
+      box-shadow: inset 0 -3px 0 var(--accent-dark), 0 8px 18px rgba(184, 61, 35, 0.26);
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: translateY(1px);
+      box-shadow: inset 0 -2px 0 var(--accent-dark), 0 4px 12px rgba(184, 61, 35, 0.22);
+    }
+
+    .ghost {
+      background: #1f7f8f;
+      box-shadow: inset 0 -3px 0 #155866, 0 8px 18px rgba(31, 127, 143, 0.22);
+    }
+
+    .footer-hint {
+      align-self: center;
+      width: fit-content;
+      max-width: 100%;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.68);
+      color: #315365;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 8px 22px rgba(24, 52, 65, 0.12);
+    }
+
+    @media (max-width: 520px) {
+      body {
+        display: block;
+      }
+
+      .shell {
+        width: 100vw;
+        height: 100vh;
+        min-height: 0;
+        padding: 0;
+      }
+
+      .game-wrap {
+        width: 100vw;
+        height: 100vh;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+        aspect-ratio: auto;
+      }
+
+      .center-panel {
+        width: min(calc(100% - 28px), 330px);
+      }
+
+      h1 {
+        font-size: 31px;
+      }
+
+      .status-card {
+        max-width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell" aria-label="Wing Hop browser game">
+    <section class="game-wrap" id="gameWrap">
+      <canvas id="game" width="432" height="768" aria-label="Wing Hop game canvas"></canvas>
+
+      <div class="hud" aria-hidden="true">
+        <div class="topbar">
+          <div class="score-card">
+            <div class="score-label">Score</div>
+            <div class="score-value" id="score">0</div>
+          </div>
+          <div class="status-card" id="status">Space, click, or tap to flap</div>
+        </div>
+        <div class="footer-hint" id="hint">Thread the gaps. Each gate is 1 point.</div>
+      </div>
+
+      <div class="center-panel" id="panel">
+        <h1>Wing Hop</h1>
+        <p class="message" id="message">Keep the little flyer airborne and slip between the garden gates.</p>
+        <div class="stats">
+          <div class="stat">
+            <span>Last</span>
+            <strong id="lastScore">0</strong>
+          </div>
+          <div class="stat">
+            <span>Best</span>
+            <strong id="bestScore">0</strong>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="startBtn" type="button">Start</button>
+          <button class="ghost" id="soundBtn" type="button" aria-pressed="true">Sound On</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const wrap = document.getElementById("gameWrap");
+    const scoreEl = document.getElementById("score");
+    const statusEl = document.getElementById("status");
+    const hintEl = document.getElementById("hint");
+    const panel = document.getElementById("panel");
+    const messageEl = document.getElementById("message");
+    const lastScoreEl = document.getElementById("lastScore");
+    const bestScoreEl = document.getElementById("bestScore");
+    const startBtn = document.getElementById("startBtn");
+    const soundBtn = document.getElementById("soundBtn");
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const groundH = 96;
+    const bird = {
+      x: 118,
+      y: H * 0.42,
+      r: 18,
+      vy: 0,
+      angle: 0
+    };
+
+    let state = "ready";
+    let score = 0;
+    let best = Number(localStorage.getItem("wingHopBest") || 0);
+    let gates = [];
+    let clouds = [];
+    let particles = [];
+    let lastTime = 0;
+    let spawnTimer = 0;
+    let groundOffset = 0;
+    let soundOn = true;
+    let audioContext = null;
+
+    const physics = {
+      gravity: 1725,
+      flap: -510,
+      gateSpeed: 165,
+      gateWidth: 74,
+      gap: 180,
+      spawnEvery: 1.48
+    };
+
+    bestScoreEl.textContent = best;
+
+    function resetWorld() {
+      bird.y = H * 0.42;
+      bird.vy = 0;
+      bird.angle = 0;
+      gates = [];
+      particles = [];
+      clouds = [
+        { x: 48, y: 82, s: 0.8, v: 12 },
+        { x: 238, y: 142, s: 1.05, v: 9 },
+        { x: 366, y: 58, s: 0.72, v: 15 }
+      ];
+      score = 0;
+      spawnTimer = 0.55;
+      groundOffset = 0;
+      updateScore();
+    }
+
+    function startGame() {
+      resetWorld();
+      state = "playing";
+      panel.hidden = true;
+      statusEl.textContent = "Space, click, or tap to flap";
+      hintEl.textContent = "Thread the gaps. Each gate is 1 point.";
+      flap();
+    }
+
+    function endGame() {
+      if (state === "over") return;
+      state = "over";
+      best = Math.max(best, score);
+      localStorage.setItem("wingHopBest", String(best));
+      lastScoreEl.textContent = score;
+      bestScoreEl.textContent = best;
+      startBtn.textContent = "Restart";
+      messageEl.textContent = score === 0
+        ? "A short flight, but a very honest one. Try again."
+        : `You cleared ${score} ${score === 1 ? "gate" : "gates"}.`;
+      statusEl.textContent = "Game over";
+      hintEl.textContent = "Press Space, click, or tap to restart.";
+      panel.hidden = false;
+      burst(bird.x, bird.y, "#ffca3a", 18);
+      playTone(95, 0.12, "sawtooth", 0.035);
+    }
+
+    function flap() {
+      if (state === "ready" || state === "over") {
+        startGame();
+        return;
+      }
+
+      bird.vy = physics.flap;
+      burst(bird.x - 12, bird.y + 12, "#ffffff", 5);
+      playTone(520, 0.055, "sine", 0.028);
+    }
+
+    function spawnGate() {
+      const minY = 126;
+      const maxY = H - groundH - 128;
+      const gapCenter = minY + Math.random() * (maxY - minY);
+      gates.push({
+        x: W + 18,
+        gapY: gapCenter,
+        passed: false,
+        wobble: Math.random() * Math.PI * 2
+      });
+    }
+
+    function update(dt) {
+      clouds.forEach((cloud) => {
+        cloud.x -= cloud.v * dt;
+        if (cloud.x < -100) {
+          cloud.x = W + 90;
+          cloud.y = 52 + Math.random() * 120;
+        }
+      });
+
+      particles = particles
+        .map((p) => ({ ...p, x: p.x + p.vx * dt, y: p.y + p.vy * dt, life: p.life - dt, vy: p.vy + 310 * dt }))
+        .filter((p) => p.life > 0);
+
+      if (state !== "playing") {
+        bird.y += Math.sin(performance.now() / 250) * 0.09;
+        return;
+      }
+
+      bird.vy += physics.gravity * dt;
+      bird.y += bird.vy * dt;
+      bird.angle = Math.max(-0.65, Math.min(1.25, bird.vy / 560));
+      groundOffset = (groundOffset + physics.gateSpeed * dt) % 38;
+      spawnTimer -= dt;
+
+      if (spawnTimer <= 0) {
+        spawnGate();
+        spawnTimer += physics.spawnEvery;
+      }
+
+      gates.forEach((gate) => {
+        gate.x -= physics.gateSpeed * dt;
+        if (!gate.passed && gate.x + physics.gateWidth < bird.x - bird.r) {
+          gate.passed = true;
+          score += 1;
+          updateScore();
+          playTone(760, 0.05, "triangle", 0.025);
+        }
+      });
+      gates = gates.filter((gate) => gate.x > -physics.gateWidth - 20);
+
+      const floorY = H - groundH;
+      if (bird.y + bird.r > floorY || bird.y - bird.r < 0) {
+        bird.y = Math.min(bird.y, floorY - bird.r);
+        endGame();
+      }
+
+      for (const gate of gates) {
+        const topBottom = gate.gapY - physics.gap / 2;
+        const bottomTop = gate.gapY + physics.gap / 2;
+        const withinX = bird.x + bird.r > gate.x && bird.x - bird.r < gate.x + physics.gateWidth;
+        const hitsTop = bird.y - bird.r < topBottom;
+        const hitsBottom = bird.y + bird.r > bottomTop;
+        if (withinX && (hitsTop || hitsBottom)) {
+          endGame();
+          break;
+        }
+      }
+    }
+
+    function draw() {
+      drawSky();
+      clouds.forEach(drawCloud);
+      drawSun();
+      gates.forEach(drawGate);
+      drawGround();
+      particles.forEach(drawParticle);
+      drawBird();
+    }
+
+    function drawSky() {
+      const gradient = ctx.createLinearGradient(0, 0, 0, H);
+      gradient.addColorStop(0, "#78d5ff");
+      gradient.addColorStop(0.68, "#dff7ff");
+      gradient.addColorStop(1, "#bff2ce");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.28)";
+      for (let y = 36; y < H - groundH; y += 84) {
+        ctx.fillRect(0, y, W, 2);
+      }
+    }
+
+    function drawSun() {
+      ctx.save();
+      ctx.translate(W - 78, 72);
+      ctx.fillStyle = "#ffd460";
+      ctx.beginPath();
+      ctx.arc(0, 0, 26, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawCloud(cloud) {
+      ctx.save();
+      ctx.translate(cloud.x, cloud.y);
+      ctx.scale(cloud.s, cloud.s);
+      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      ctx.beginPath();
+      ctx.arc(0, 9, 17, 0, Math.PI * 2);
+      ctx.arc(20, 0, 22, 0, Math.PI * 2);
+      ctx.arc(45, 10, 18, 0, Math.PI * 2);
+      ctx.rect(-3, 10, 54, 18);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawGate(gate) {
+      const w = physics.gateWidth;
+      const topH = gate.gapY - physics.gap / 2;
+      const bottomY = gate.gapY + physics.gap / 2;
+      const capH = 28;
+      const leafShift = Math.sin(performance.now() / 340 + gate.wobble) * 3;
+
+      drawGatePart(gate.x, 0, w, topH, true);
+      drawGatePart(gate.x, bottomY, w, H - groundH - bottomY, false);
+
+      ctx.fillStyle = "#287d52";
+      roundedRect(gate.x - 8, topH - capH, w + 16, capH, 8);
+      ctx.fill();
+      roundedRect(gate.x - 8, bottomY, w + 16, capH, 8);
+      ctx.fill();
+
+      ctx.fillStyle = "#73d36e";
+      ctx.beginPath();
+      ctx.ellipse(gate.x + w * 0.28, topH - 11 + leafShift, 16, 8, -0.25, 0, Math.PI * 2);
+      ctx.ellipse(gate.x + w * 0.74, bottomY + 12 - leafShift, 17, 8, 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawGatePart(x, y, w, h, top) {
+      const gradient = ctx.createLinearGradient(x, 0, x + w, 0);
+      gradient.addColorStop(0, "#2a9c63");
+      gradient.addColorStop(0.55, "#49c56f");
+      gradient.addColorStop(1, "#1f764c");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x, y, w, h);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.22)";
+      ctx.lineWidth = 3;
+      for (let stripe = x + 17; stripe < x + w; stripe += 22) {
+        ctx.beginPath();
+        ctx.moveTo(stripe, y + (top ? 0 : 4));
+        ctx.lineTo(stripe - 9, y + h - (top ? 4 : 0));
+        ctx.stroke();
+      }
+    }
+
+    function drawGround() {
+      const y = H - groundH;
+      ctx.fillStyle = "#4fc66d";
+      ctx.fillRect(0, y, W, groundH);
+      ctx.fillStyle = "#288f51";
+      for (let x = -38 - groundOffset; x < W + 38; x += 38) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + 4);
+        ctx.lineTo(x + 19, y - 15);
+        ctx.lineTo(x + 38, y + 4);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#96633b";
+      ctx.fillRect(0, y + 38, W, groundH - 38);
+      ctx.fillStyle = "rgba(255,255,255,0.16)";
+      for (let x = -groundOffset; x < W; x += 38) {
+        ctx.fillRect(x, y + 51, 18, 5);
+      }
+    }
+
+    function drawBird() {
+      ctx.save();
+      ctx.translate(bird.x, bird.y);
+      ctx.rotate(bird.angle);
+
+      ctx.fillStyle = "rgba(0,0,0,0.13)";
+      ctx.beginPath();
+      ctx.ellipse(4, 24, 22, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffca3a";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 21, 17, 0.08, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#f39b2f";
+      ctx.beginPath();
+      ctx.ellipse(-8, 8 + Math.sin(performance.now() / 72) * 4, 13, 8, -0.65, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(9, -6, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#17212b";
+      ctx.beginPath();
+      ctx.arc(11, -5, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#f05a30";
+      ctx.beginPath();
+      ctx.moveTo(18, 0);
+      ctx.lineTo(34, 6);
+      ctx.lineTo(18, 11);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawParticle(p) {
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    function roundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function burst(x, y, color, count) {
+      for (let i = 0; i < count; i += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 70 + Math.random() * 170;
+        const life = 0.22 + Math.random() * 0.28;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: 2 + Math.random() * 4,
+          color,
+          life,
+          maxLife: life
+        });
+      }
+    }
+
+    function updateScore() {
+      scoreEl.textContent = score;
+    }
+
+    function playTone(freq, duration, type, gain) {
+      if (!soundOn) return;
+      try {
+        audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioContext.createOscillator();
+        const volume = audioContext.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        volume.gain.value = gain;
+        volume.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+        osc.connect(volume);
+        volume.connect(audioContext.destination);
+        osc.start();
+        osc.stop(audioContext.currentTime + duration);
+      } catch {
+        soundOn = false;
+      }
+    }
+
+    function loop(time) {
+      const dt = Math.min(0.033, (time - lastTime) / 1000 || 0);
+      lastTime = time;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function handleAction(event) {
+      event.preventDefault();
+      flap();
+    }
+
+    startBtn.addEventListener("click", startGame);
+    soundBtn.addEventListener("click", () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? "Sound On" : "Sound Off";
+      soundBtn.setAttribute("aria-pressed", String(soundOn));
+      if (soundOn) playTone(420, 0.04, "sine", 0.02);
+    });
+
+    wrap.addEventListener("pointerdown", (event) => {
+      if (event.target instanceof HTMLButtonElement) return;
+      handleAction(event);
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") {
+        handleAction(event);
+      }
+    });
+
+    resetWorld();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

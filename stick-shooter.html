@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stickline Rush</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #eef7ff;
+      --muted: #9bb0c5;
+      --panel: rgba(11, 17, 27, 0.78);
+      --line: rgba(238, 247, 255, 0.16);
+      --accent: #ffb238;
+      --accent-2: #4ee0b7;
+      --danger: #ff5d66;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(78, 224, 183, 0.22), transparent 30%),
+        radial-gradient(circle at 78% 18%, rgba(255, 178, 56, 0.18), transparent 26%),
+        linear-gradient(180deg, #101827 0%, #162235 52%, #0d121c 100%);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+    }
+
+    .shell {
+      width: min(100vw, 1180px);
+      height: min(100vh, 720px);
+      min-height: 560px;
+      padding: 18px;
+      display: grid;
+      place-items: center;
+    }
+
+    .game {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #101723;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      padding: 14px;
+      pointer-events: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(74px, auto));
+      gap: 8px;
+    }
+
+    .metric,
+    .hint,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+    }
+
+    .metric {
+      padding: 8px 10px;
+      min-width: 76px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 24px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar {
+      overflow: hidden;
+      height: 7px;
+      margin-top: 7px;
+      border-radius: 999px;
+      background: rgba(238, 247, 255, 0.15);
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      width: 100%;
+      border-radius: inherit;
+      background: var(--accent-2);
+      transform-origin: left center;
+    }
+
+    .bar.heat i {
+      background: var(--accent);
+    }
+
+    .bar.health i {
+      background: var(--danger);
+    }
+
+    .hint {
+      max-width: 260px;
+      padding: 9px 11px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 750;
+      text-align: right;
+    }
+
+    .panel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(calc(100% - 36px), 390px);
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      text-align: center;
+      pointer-events: auto;
+    }
+
+    .panel[hidden] {
+      display: none;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 38px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .copy {
+      margin: 10px 0 16px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 650;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 25px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 16px;
+      color: #101723;
+      background: var(--accent);
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22), 0 10px 22px rgba(255, 178, 56, 0.22);
+    }
+
+    button.secondary {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.13);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    @media (max-width: 700px) {
+      .shell {
+        width: 100vw;
+        height: 100vh;
+        min-height: 0;
+        padding: 0;
+      }
+
+      .game {
+        border: 0;
+        border-radius: 0;
+      }
+
+      .hud {
+        padding: 10px;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(76px, auto));
+      }
+
+      .hint {
+        max-width: 160px;
+        font-size: 11px;
+      }
+
+      h1 {
+        font-size: 33px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell" aria-label="Stickline Rush browser game">
+    <section class="game" id="gameBox">
+      <canvas id="arena" width="1180" height="720"></canvas>
+      <div class="hud" aria-hidden="true">
+        <div class="metrics">
+          <div class="metric">
+            <span>Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <div class="metric">
+            <span>Wave</span>
+            <strong id="wave">1</strong>
+          </div>
+          <div class="metric">
+            <span>Health</span>
+            <strong id="health">100</strong>
+            <div class="bar health"><i id="healthBar"></i></div>
+          </div>
+          <div class="metric">
+            <span>Heat</span>
+            <strong id="heat">0%</strong>
+            <div class="bar heat"><i id="heatBar"></i></div>
+          </div>
+        </div>
+        <div class="hint" id="hint">Move with WASD. Aim with mouse. Hold click to fire.</div>
+      </div>
+
+      <div class="panel" id="panel">
+        <h1>Stickline Rush</h1>
+        <p class="copy" id="copy">An arcade stick-figure survival game. Keep moving, aim cleanly, and manage your machine gun heat.</p>
+        <div class="stats">
+          <div class="stat">
+            <span>Last Score</span>
+            <strong id="lastScore">0</strong>
+          </div>
+          <div class="stat">
+            <span>Best Score</span>
+            <strong id="bestScore">0</strong>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="startBtn" type="button">Start</button>
+          <button class="secondary" id="soundBtn" type="button" aria-pressed="true">Sound On</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("arena");
+    const ctx = canvas.getContext("2d");
+    const box = document.getElementById("gameBox");
+    const panel = document.getElementById("panel");
+    const copyEl = document.getElementById("copy");
+    const startBtn = document.getElementById("startBtn");
+    const soundBtn = document.getElementById("soundBtn");
+    const scoreEl = document.getElementById("score");
+    const waveEl = document.getElementById("wave");
+    const healthEl = document.getElementById("health");
+    const heatEl = document.getElementById("heat");
+    const healthBar = document.getElementById("healthBar");
+    const heatBar = document.getElementById("heatBar");
+    const lastScoreEl = document.getElementById("lastScore");
+    const bestScoreEl = document.getElementById("bestScore");
+    const hintEl = document.getElementById("hint");
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const keys = new Set();
+    const pointer = { x: W * 0.62, y: H * 0.5, down: false };
+    const player = { x: W * 0.5, y: H * 0.58, vx: 0, vy: 0, r: 22, hp: 100, heat: 0, fireTimer: 0, invuln: 0 };
+    const bullets = [];
+    const enemies = [];
+    const sparks = [];
+    const floaters = [];
+
+    let state = "ready";
+    let score = 0;
+    let wave = 1;
+    let spawnTimer = 0;
+    let lastTime = 0;
+    let best = Number(localStorage.getItem("sticklineBest") || 0);
+    let soundOn = true;
+    let audioContext = null;
+
+    bestScoreEl.textContent = best;
+
+    function resizePointer(event) {
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * W;
+      pointer.y = ((event.clientY - rect.top) / rect.height) * H;
+    }
+
+    function reset() {
+      player.x = W * 0.5;
+      player.y = H * 0.58;
+      player.vx = 0;
+      player.vy = 0;
+      player.hp = 100;
+      player.heat = 0;
+      player.fireTimer = 0;
+      player.invuln = 0;
+      bullets.length = 0;
+      enemies.length = 0;
+      sparks.length = 0;
+      floaters.length = 0;
+      score = 0;
+      wave = 1;
+      spawnTimer = 0.25;
+      updateHud();
+    }
+
+    function start() {
+      reset();
+      state = "playing";
+      panel.hidden = true;
+      hintEl.textContent = "Move with WASD. Aim with mouse. Hold click to fire.";
+    }
+
+    function gameOver() {
+      if (state !== "playing") return;
+      state = "over";
+      best = Math.max(best, score);
+      localStorage.setItem("sticklineBest", String(best));
+      lastScoreEl.textContent = score;
+      bestScoreEl.textContent = best;
+      startBtn.textContent = "Restart";
+      copyEl.textContent = `You held out to wave ${wave} and scored ${score}.`;
+      panel.hidden = false;
+      hintEl.textContent = "Press Enter or click Restart.";
+      burst(player.x, player.y, "#ff5d66", 34);
+      tone(120, 0.16, "sawtooth", 0.04);
+    }
+
+    function spawnEnemy() {
+      const edge = Math.floor(Math.random() * 4);
+      const pad = 34;
+      let x = 0;
+      let y = 0;
+
+      if (edge === 0) {
+        x = -pad;
+        y = Math.random() * H;
+      } else if (edge === 1) {
+        x = W + pad;
+        y = Math.random() * H;
+      } else if (edge === 2) {
+        x = Math.random() * W;
+        y = -pad;
+      } else {
+        x = Math.random() * W;
+        y = H + pad;
+      }
+
+      const fast = Math.random() < Math.min(0.12 + wave * 0.025, 0.42);
+      enemies.push({
+        x,
+        y,
+        r: fast ? 17 : 21,
+        hp: fast ? 2 : 3 + Math.floor(wave / 3),
+        speed: fast ? 118 + wave * 5 : 76 + wave * 4,
+        hit: 0,
+        fast
+      });
+    }
+
+    function fire(dt) {
+      player.fireTimer -= dt;
+      if (!pointer.down || player.heat >= 96 || player.fireTimer > 0) return;
+
+      const dx = pointer.x - player.x;
+      const dy = pointer.y - player.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const spread = (Math.random() - 0.5) * 0.12;
+      const angle = Math.atan2(dy, dx) + spread;
+      const muzzle = 30;
+
+      bullets.push({
+        x: player.x + Math.cos(angle) * muzzle,
+        y: player.y + Math.sin(angle) * muzzle,
+        vx: Math.cos(angle) * 760,
+        vy: Math.sin(angle) * 760,
+        life: 0.76
+      });
+
+      player.heat += 4.7;
+      player.fireTimer = 0.055;
+      burst(player.x + (dx / len) * muzzle, player.y + (dy / len) * muzzle, "#ffdd72", 4);
+      tone(180 + Math.random() * 90, 0.022, "square", 0.012);
+    }
+
+    function update(dt) {
+      sparks.forEach((p) => {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 260 * dt;
+        p.life -= dt;
+      });
+      for (let i = sparks.length - 1; i >= 0; i -= 1) {
+        if (sparks[i].life <= 0) sparks.splice(i, 1);
+      }
+
+      floaters.forEach((f) => {
+        f.y -= 34 * dt;
+        f.life -= dt;
+      });
+      for (let i = floaters.length - 1; i >= 0; i -= 1) {
+        if (floaters[i].life <= 0) floaters.splice(i, 1);
+      }
+
+      if (state !== "playing") return;
+
+      const ax = (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) - (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0);
+      const ay = (keys.has("KeyS") || keys.has("ArrowDown") ? 1 : 0) - (keys.has("KeyW") || keys.has("ArrowUp") ? 1 : 0);
+      const mag = Math.hypot(ax, ay) || 1;
+      const speed = keys.has("ShiftLeft") || keys.has("ShiftRight") ? 248 : 210;
+
+      player.vx += ((ax / mag) * speed - player.vx) * Math.min(1, dt * 11);
+      player.vy += ((ay / mag) * speed - player.vy) * Math.min(1, dt * 11);
+      player.x = clamp(player.x + player.vx * dt, 30, W - 30);
+      player.y = clamp(player.y + player.vy * dt, 54, H - 34);
+      player.heat = Math.max(0, player.heat - (pointer.down ? 13 : 26) * dt);
+      player.invuln = Math.max(0, player.invuln - dt);
+
+      fire(dt);
+
+      spawnTimer -= dt;
+      if (spawnTimer <= 0) {
+        spawnEnemy();
+        const interval = Math.max(0.28, 1.02 - wave * 0.055);
+        spawnTimer += interval;
+      }
+
+      bullets.forEach((b) => {
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.life -= dt;
+      });
+      for (let i = bullets.length - 1; i >= 0; i -= 1) {
+        const b = bullets[i];
+        if (b.life <= 0 || b.x < -40 || b.x > W + 40 || b.y < -40 || b.y > H + 40) bullets.splice(i, 1);
+      }
+
+      enemies.forEach((e) => {
+        const dx = player.x - e.x;
+        const dy = player.y - e.y;
+        const len = Math.hypot(dx, dy) || 1;
+        e.x += (dx / len) * e.speed * dt;
+        e.y += (dy / len) * e.speed * dt;
+        e.hit = Math.max(0, e.hit - dt);
+      });
+
+      handleHits();
+      if (player.hp <= 0) gameOver();
+
+      wave = 1 + Math.floor(score / 140);
+      updateHud();
+    }
+
+    function handleHits() {
+      for (let bi = bullets.length - 1; bi >= 0; bi -= 1) {
+        const b = bullets[bi];
+        let used = false;
+        for (let ei = enemies.length - 1; ei >= 0; ei -= 1) {
+          const e = enemies[ei];
+          if (Math.hypot(b.x - e.x, b.y - e.y) < e.r + 6) {
+            bullets.splice(bi, 1);
+            used = true;
+            e.hp -= 1;
+            e.hit = 0.08;
+            burst(b.x, b.y, "#ffdd72", 6);
+            if (e.hp <= 0) {
+              enemies.splice(ei, 1);
+              const points = e.fast ? 18 : 12;
+              score += points;
+              floaters.push({ x: e.x, y: e.y - 22, text: `+${points}`, life: 0.7 });
+              burst(e.x, e.y, e.fast ? "#4ee0b7" : "#9bb0c5", 18);
+              tone(420, 0.035, "triangle", 0.018);
+            }
+            break;
+          }
+        }
+        if (used) continue;
+      }
+
+      enemies.forEach((e) => {
+        const hitPlayer = Math.hypot(player.x - e.x, player.y - e.y) < player.r + e.r - 6;
+        if (hitPlayer && player.invuln <= 0) {
+          player.hp -= e.fast ? 9 : 13;
+          player.invuln = 0.38;
+          burst(player.x, player.y, "#ff5d66", 14);
+          tone(95, 0.055, "sawtooth", 0.025);
+        }
+      });
+    }
+
+    function draw() {
+      drawBackdrop();
+      bullets.forEach(drawBullet);
+      enemies.forEach(drawEnemy);
+      drawPlayer();
+      sparks.forEach(drawSpark);
+      floaters.forEach(drawFloater);
+      if (state !== "playing") drawReticle();
+    }
+
+    function drawBackdrop() {
+      ctx.clearRect(0, 0, W, H);
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, "#122033");
+      grad.addColorStop(0.52, "#17263a");
+      grad.addColorStop(1, "#0e141f");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.strokeStyle = "rgba(238,247,255,0.055)";
+      ctx.lineWidth = 1;
+      for (let x = 40; x < W; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      for (let y = 40; y < H; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "rgba(78,224,183,0.16)";
+      ctx.lineWidth = 2;
+      roundedRect(22, 46, W - 44, H - 72, 8);
+      ctx.stroke();
+    }
+
+    function drawPlayer() {
+      const angle = Math.atan2(pointer.y - player.y, pointer.x - player.x);
+      const flash = player.invuln > 0 && Math.floor(player.invuln * 30) % 2 === 0;
+      drawStick(player.x, player.y, angle, flash ? "#ff9aa0" : "#eef7ff", "#ffb238", true);
+    }
+
+    function drawEnemy(e) {
+      const angle = Math.atan2(player.y - e.y, player.x - e.x);
+      const color = e.hit > 0 ? "#ffffff" : (e.fast ? "#4ee0b7" : "#9bb0c5");
+      drawStick(e.x, e.y, angle, color, e.fast ? "#4ee0b7" : "#9bb0c5", false);
+    }
+
+    function drawStick(x, y, angle, color, accent, armed) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 4;
+
+      ctx.beginPath();
+      ctx.arc(0, -23, 9, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, -13);
+      ctx.lineTo(0, 18);
+      ctx.moveTo(0, -2);
+      ctx.lineTo(armed ? 33 : 20, armed ? -2 : -8);
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-17, armed ? 9 : 2);
+      ctx.moveTo(0, 18);
+      ctx.lineTo(15, 38);
+      ctx.moveTo(0, 18);
+      ctx.lineTo(-14, 38);
+      ctx.stroke();
+
+      if (armed) {
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(19, -5);
+        ctx.lineTo(43, -5);
+        ctx.stroke();
+        ctx.strokeStyle = "#101723";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(20, -5);
+        ctx.lineTo(42, -5);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawBullet(b) {
+      ctx.strokeStyle = "#ffdd72";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y);
+      ctx.lineTo(b.x - b.vx * 0.018, b.y - b.vy * 0.018);
+      ctx.stroke();
+    }
+
+    function drawSpark(p) {
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    function drawFloater(f) {
+      ctx.globalAlpha = Math.max(0, f.life / 0.7);
+      ctx.fillStyle = "#ffdd72";
+      ctx.font = "900 18px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(f.text, f.x, f.y);
+      ctx.globalAlpha = 1;
+    }
+
+    function drawReticle() {
+      ctx.strokeStyle = "rgba(255, 178, 56, 0.62)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(pointer.x, pointer.y, 14, 0, Math.PI * 2);
+      ctx.moveTo(pointer.x - 21, pointer.y);
+      ctx.lineTo(pointer.x - 8, pointer.y);
+      ctx.moveTo(pointer.x + 8, pointer.y);
+      ctx.lineTo(pointer.x + 21, pointer.y);
+      ctx.moveTo(pointer.x, pointer.y - 21);
+      ctx.lineTo(pointer.x, pointer.y - 8);
+      ctx.moveTo(pointer.x, pointer.y + 8);
+      ctx.lineTo(pointer.x, pointer.y + 21);
+      ctx.stroke();
+    }
+
+    function burst(x, y, color, count) {
+      for (let i = 0; i < count; i += 1) {
+        const a = Math.random() * Math.PI * 2;
+        const s = 80 + Math.random() * 240;
+        const life = 0.18 + Math.random() * 0.32;
+        sparks.push({
+          x,
+          y,
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s,
+          size: 2 + Math.random() * 3,
+          color,
+          life,
+          maxLife: life
+        });
+      }
+    }
+
+    function updateHud() {
+      scoreEl.textContent = score;
+      waveEl.textContent = wave;
+      healthEl.textContent = Math.max(0, Math.round(player.hp));
+      heatEl.textContent = `${Math.round(player.heat)}%`;
+      healthBar.style.transform = `scaleX(${clamp(player.hp / 100, 0, 1)})`;
+      heatBar.style.transform = `scaleX(${clamp(player.heat / 100, 0, 1)})`;
+      if (player.heat > 94) hintEl.textContent = "Gun overheated. Release fire to cool down.";
+    }
+
+    function tone(freq, duration, type, gain) {
+      if (!soundOn) return;
+      try {
+        audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioContext.createOscillator();
+        const vol = audioContext.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        vol.gain.value = gain;
+        vol.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+        osc.connect(vol);
+        vol.connect(audioContext.destination);
+        osc.start();
+        osc.stop(audioContext.currentTime + duration);
+      } catch {
+        soundOn = false;
+      }
+    }
+
+    function roundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function loop(time) {
+      const dt = Math.min(0.033, (time - lastTime) / 1000 || 0);
+      lastTime = time;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    box.addEventListener("pointermove", resizePointer);
+    box.addEventListener("pointerdown", (event) => {
+      resizePointer(event);
+      pointer.down = true;
+      if (state === "ready") start();
+      event.preventDefault();
+    });
+    window.addEventListener("pointerup", () => {
+      pointer.down = false;
+      if (state === "playing") hintEl.textContent = "Move with WASD. Aim with mouse. Hold click to fire.";
+    });
+    window.addEventListener("keydown", (event) => {
+      keys.add(event.code);
+      if ((event.code === "Enter" || event.code === "Space") && state !== "playing") {
+        start();
+      }
+      if (event.code === "Space") {
+        pointer.down = true;
+        event.preventDefault();
+      }
+    });
+    window.addEventListener("keyup", (event) => {
+      keys.delete(event.code);
+      if (event.code === "Space") pointer.down = false;
+    });
+    startBtn.addEventListener("click", start);
+    soundBtn.addEventListener("click", () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? "Sound On" : "Sound Off";
+      soundBtn.setAttribute("aria-pressed", String(soundOn));
+      if (soundOn) tone(520, 0.04, "sine", 0.02);
+    });
+
+    reset();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
