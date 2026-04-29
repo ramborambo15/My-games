@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neon Drift: Skyfall</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="game"></div>
+
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="hud" aria-hidden="true">
+    <div class="hud-grid">
+      <div class="metric">
+        <span>Score</span>
+        <strong id="score">0</strong>
+      </div>
+      <div class="metric">
+        <span>Speed</span>
+        <strong id="speed">0</strong>
+      </div>
+      <div class="metric">
+        <span>Boost</span>
+        <strong id="boostText">100%</strong>
+        <div class="bar boost"><i id="boostBar"></i></div>
+      </div>
+      <div class="metric">
+        <span>Combo</span>
+        <strong id="combo">x1</strong>
+      </div>
+    </div>
+    <div class="status">
+      <span id="best">Best 0</span>
+      <span id="shards">Shards 0</span>
+      <span id="distance">0 m</span>
+    </div>
+  </header>
+
+  <nav class="touch" aria-label="Touch controls">
+    <button id="touchLeft" type="button">Left</button>
+    <button id="touchJump" type="button">Jump</button>
+    <button id="touchBoost" type="button">Boost</button>
+    <button id="touchRight" type="button">Right</button>
+  </nav>
+
+  <section class="panel" id="menu">
+    <p class="eyebrow">Sky city survival racing</p>
+    <h1>Neon Drift:<br>Skyfall</h1>
+    <p class="copy">Thread a hover-bike through floating cyberpunk lanes, leap broken track, chain energy shards, and boost until the skyline melts into light.</p>
+    <div class="bestline" id="menuBest">Best score 0</div>
+    <div class="actions">
+      <button id="startBtn" type="button">Start Run</button>
+      <button class="ghost" id="muteBtn" type="button" aria-pressed="false">Sound On</button>
+    </div>
+    <div class="controls">
+      <span>A / D</span>
+      <span>Space</span>
+      <span>Shift</span>
+      <span>Escape</span>
+    </div>
+  </section>
+
+  <section class="panel small" id="pause" hidden>
+    <p class="eyebrow">Run paused</p>
+    <h2>Neon Drift</h2>
+    <p class="copy">Catch your breath above the clouds.</p>
+    <div class="actions">
+      <button id="resumeBtn" type="button">Resume</button>
+      <button class="ghost" id="restartFromPauseBtn" type="button">Restart</button>
+    </div>
+  </section>
+
+  <section class="panel small" id="gameOver" hidden>
+    <p class="eyebrow">Skyfall complete</p>
+    <h2>Run Over</h2>
+    <div class="results">
+      <div><span>Score</span><strong id="finalScore">0</strong></div>
+      <div><span>Distance</span><strong id="finalDistance">0 m</strong></div>
+      <div><span>Shards</span><strong id="finalShards">0</strong></div>
+      <div><span>Best</span><strong id="finalBest">0</strong></div>
+    </div>
+    <div class="actions">
+      <button id="restartBtn" type="button">Restart</button>
+      <button class="ghost" id="menuBtn" type="button">Menu</button>
+    </div>
+  </section>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

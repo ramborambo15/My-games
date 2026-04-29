@@ -149,6 +149,83 @@
       background-size: 34px 34px, 34px 34px, auto;
     }
 
+    .preview.neon {
+      background:
+        radial-gradient(circle at 52% 38%, rgba(57, 231, 255, 0.34), transparent 24%),
+        linear-gradient(rgba(198, 234, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(198, 234, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, #070a1b 0%, #10163a 55%, #5b3978 100%);
+      background-size: auto, 32px 32px, 32px 32px, auto;
+    }
+
+    .neon-track {
+      position: absolute;
+      left: 50%;
+      bottom: -12%;
+      width: 54%;
+      height: 88%;
+      border-left: 5px solid #39e7ff;
+      border-right: 5px solid #ff3df2;
+      background: linear-gradient(180deg, rgba(57, 231, 255, 0.18), rgba(255, 61, 242, 0.08));
+      transform: translateX(-50%) perspective(180px) rotateX(58deg);
+      box-shadow: 0 0 26px rgba(57, 231, 255, 0.55), inset 0 0 24px rgba(255, 61, 242, 0.22);
+    }
+
+    .neon-bike {
+      position: absolute;
+      left: 50%;
+      bottom: 24%;
+      width: 78px;
+      height: 34px;
+      border-radius: 10px 10px 18px 18px;
+      background: #111729;
+      transform: translateX(-50%) skewX(-10deg);
+      box-shadow: 0 0 0 3px rgba(57, 231, 255, 0.55), 0 18px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .neon-bike::before {
+      content: "";
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: -46px;
+      height: 58px;
+      background: linear-gradient(180deg, rgba(57, 231, 255, 0.78), transparent);
+      filter: blur(2px);
+    }
+
+    .neon-obstacle {
+      position: absolute;
+      top: 25%;
+      width: 42px;
+      height: 58px;
+      border-radius: 8px;
+      background: #ff335a;
+      box-shadow: 0 0 22px rgba(255, 51, 90, 0.82);
+    }
+
+    .neon-obstacle.one {
+      left: 22%;
+    }
+
+    .neon-obstacle.two {
+      right: 22%;
+      top: 42%;
+      background: #8d5cff;
+      box-shadow: 0 0 22px rgba(141, 92, 255, 0.82);
+    }
+
+    .neon-shard {
+      position: absolute;
+      left: 48%;
+      top: 30%;
+      width: 18px;
+      height: 18px;
+      background: #ffe45e;
+      transform: rotate(45deg);
+      box-shadow: 0 0 22px rgba(255, 228, 94, 0.9);
+    }
+
     .mesa {
       position: absolute;
       bottom: 0;
@@ -509,6 +586,28 @@
     </section>
 
     <section class="grid" aria-label="Games">
+      <a class="card" href="neon-drift-skyfall/">
+        <div class="preview neon" aria-hidden="true">
+          <div class="neon-track"></div>
+          <div class="neon-obstacle one"></div>
+          <div class="neon-obstacle two"></div>
+          <div class="neon-shard"></div>
+          <div class="neon-bike"></div>
+        </div>
+        <div class="content">
+          <div>
+            <h2>Neon Drift: Skyfall</h2>
+            <p>A polished 3D hover-bike survival racer above the clouds with boost, combos, shards, and procedural neon tracks.</p>
+            <div class="meta">
+              <span>3D racer</span>
+              <span>Boost</span>
+              <span>Procedural</span>
+            </div>
+          </div>
+          <div class="play">Play Neon Drift</div>
+        </div>
+      </a>
+
       <a class="card" href="outback-rush-3d.html">
         <div class="preview outback" aria-hidden="true">
           <div class="mesa one"></div>
