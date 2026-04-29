@@ -657,8 +657,11 @@
 
         for (let j = enemies.length - 1; j >= 0 && !remove; j -= 1) {
           const enemy = enemies[j];
-          const dist = b.mesh.position.distanceTo(enemy.body.position);
-          if (dist < (enemy.heavy ? 1.55 : 1.25)) {
+          const dx = b.mesh.position.x - enemy.body.position.x;
+          const dz = b.mesh.position.z - enemy.body.position.z;
+          const horizontalDist = Math.hypot(dx, dz);
+          const verticalDist = Math.abs(b.mesh.position.y - 1.55);
+          if (horizontalDist < (enemy.heavy ? 1.8 : 1.45) && verticalDist < 1.65) {
             enemy.hp -= 1;
             enemy.hit = 0.12;
             remove = true;
