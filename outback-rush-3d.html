@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Outback Rush 3D</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #fff7e8;
+      --muted: #cbbda7;
+      --panel: rgba(28, 19, 12, 0.76);
+      --line: rgba(255, 247, 232, 0.18);
+      --gold: #ffbd3f;
+      --red: #ff4d4d;
+      --green: #5dff9d;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #15100c;
+      color: var(--ink);
+    }
+
+    #game {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(78px, auto));
+      gap: 8px;
+    }
+
+    .metric,
+    .hint,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(9px);
+    }
+
+    .metric {
+      padding: 8px 10px;
+      min-width: 78px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 25px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar {
+      height: 7px;
+      overflow: hidden;
+      margin-top: 7px;
+      border-radius: 999px;
+      background: rgba(255, 247, 232, 0.16);
+    }
+
+    .bar i {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--green);
+      transform-origin: left center;
+    }
+
+    .bar.health i {
+      background: var(--red);
+    }
+
+    .bar.heat i {
+      background: var(--gold);
+    }
+
+    .hint {
+      max-width: 260px;
+      padding: 9px 11px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 750;
+      text-align: right;
+    }
+
+    .panel {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: min(calc(100% - 34px), 430px);
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      text-align: center;
+      pointer-events: auto;
+    }
+
+    .panel[hidden] {
+      display: none;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(38px, 8vw, 62px);
+      line-height: 0.92;
+      letter-spacing: 0;
+    }
+
+    .copy {
+      margin: 12px 0 16px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.42;
+      font-weight: 650;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 28px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button,
+    a.back {
+      appearance: none;
+      min-height: 42px;
+      display: inline-grid;
+      place-items: center;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 15px;
+      color: #1a130d;
+      background: var(--gold);
+      font: inherit;
+      font-weight: 950;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22), 0 12px 26px rgba(255, 189, 63, 0.2);
+    }
+
+    a.back {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.11);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    @media (max-width: 740px) {
+      .hud {
+        padding: 10px;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(78px, auto));
+      }
+
+      .hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <div class="hud" aria-hidden="true">
+    <div class="metrics">
+      <div class="metric">
+        <span>Score</span>
+        <strong id="score">0</strong>
+      </div>
+      <div class="metric">
+        <span>Wave</span>
+        <strong id="wave">1</strong>
+      </div>
+      <div class="metric">
+        <span>Health</span>
+        <strong id="health">100</strong>
+        <div class="bar health"><i id="healthBar"></i></div>
+      </div>
+      <div class="metric">
+        <span>Heat</span>
+        <strong id="heat">0%</strong>
+        <div class="bar heat"><i id="heatBar"></i></div>
+      </div>
+    </div>
+    <div class="hint" id="hint">WASD to move. Aim with mouse. Hold click to fire. Space to dash.</div>
+  </div>
+
+  <section class="panel" id="panel">
+    <h1>Outback Rush 3D</h1>
+    <p class="copy" id="copy">An original 3D desert brawler. Blast through waves of wild cartoon rivals and keep your blaster from overheating.</p>
+    <div class="stats">
+      <div class="stat">
+        <span>Last Score</span>
+        <strong id="lastScore">0</strong>
+      </div>
+      <div class="stat">
+        <span>Best Score</span>
+        <strong id="bestScore">0</strong>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="startBtn" type="button">Start</button>
+      <a class="back" href="index.html">Arcade</a>
+    </div>
+  </section>
+
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js";
+
+    const root = document.getElementById("game");
+    const panel = document.getElementById("panel");
+    const copyEl = document.getElementById("copy");
+    const startBtn = document.getElementById("startBtn");
+    const scoreEl = document.getElementById("score");
+    const waveEl = document.getElementById("wave");
+    const healthEl = document.getElementById("health");
+    const heatEl = document.getElementById("heat");
+    const healthBar = document.getElementById("healthBar");
+    const heatBar = document.getElementById("heatBar");
+    const lastScoreEl = document.getElementById("lastScore");
+    const bestScoreEl = document.getElementById("bestScore");
+    const hintEl = document.getElementById("hint");
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffb35a);
+    scene.fog = new THREE.Fog(0xffb35a, 28, 92);
+
+    const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 160);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    root.appendChild(renderer.domElement);
+
+    const keys = new Set();
+    const mouse = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    const aimPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const aimPoint = new THREE.Vector3(0, 0, 0);
+    const clock = new THREE.Clock();
+
+    const world = {
+      state: "ready",
+      score: 0,
+      wave: 1,
+      best: Number(localStorage.getItem("outbackRushBest") || 0),
+      spawnTimer: 0,
+      arena: 38,
+      shooting: false,
+      dashTimer: 0
+    };
+
+    const player = {
+      hp: 100,
+      heat: 0,
+      cooldown: 0,
+      invuln: 0,
+      speed: 12,
+      body: makeFighter(0xffd75e, 0x2b1a12, true)
+    };
+
+    const bullets = [];
+    const enemies = [];
+    const bursts = [];
+    const props = [];
+
+    bestScoreEl.textContent = world.best;
+
+    setupLighting();
+    setupWorld();
+    scene.add(player.body);
+    resetGame();
+    animate();
+
+    function setupLighting() {
+      const hemi = new THREE.HemisphereLight(0xfff1b8, 0x6c4932, 2.2);
+      scene.add(hemi);
+
+      const sun = new THREE.DirectionalLight(0xffffff, 2.1);
+      sun.position.set(18, 32, 14);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      sun.shadow.camera.left = -42;
+      sun.shadow.camera.right = 42;
+      sun.shadow.camera.top = 42;
+      sun.shadow.camera.bottom = -42;
+      scene.add(sun);
+    }
+
+    function setupWorld() {
+      const groundGeo = new THREE.CircleGeometry(48, 96);
+      const groundMat = new THREE.MeshStandardMaterial({ color: 0xc47a36, roughness: 0.9 });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      const ringGeo = new THREE.TorusGeometry(world.arena + 1.2, 0.18, 12, 128);
+      const ringMat = new THREE.MeshStandardMaterial({ color: 0xffdd77, emissive: 0x6b3a12, emissiveIntensity: 0.25 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 0.16;
+      scene.add(ring);
+
+      addMesa(-28, -24, 6, 6, 0xe08a3a);
+      addMesa(24, -30, 4, 8, 0xa94f2a);
+      addMesa(-34, 18, 5, 5, 0xd87832);
+      addMesa(32, 22, 7, 7, 0x8f4327);
+
+      for (let i = 0; i < 22; i += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 15 + Math.random() * 28;
+        addCrystal(Math.cos(angle) * radius, Math.sin(angle) * radius);
+      }
+    }
+
+    function addMesa(x, z, radius, height, color) {
+      const geo = new THREE.CylinderGeometry(radius * 0.7, radius, height, 7);
+      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.85 });
+      const mesa = new THREE.Mesh(geo, mat);
+      mesa.position.set(x, height / 2 - 0.1, z);
+      mesa.castShadow = true;
+      mesa.receiveShadow = true;
+      scene.add(mesa);
+      props.push(mesa);
+    }
+
+    function addCrystal(x, z) {
+      const geo = new THREE.ConeGeometry(0.35 + Math.random() * 0.35, 1.2 + Math.random() * 1.7, 5);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x5dff9d,
+        emissive: 0x126947,
+        emissiveIntensity: 0.45,
+        roughness: 0.45
+      });
+      const crystal = new THREE.Mesh(geo, mat);
+      crystal.position.set(x, 0.65, z);
+      crystal.rotation.y = Math.random() * Math.PI;
+      crystal.castShadow = true;
+      scene.add(crystal);
+      props.push(crystal);
+    }
+
+    function makeFighter(color, accent, isPlayer) {
+      const group = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.55 });
+      const darkMat = new THREE.MeshStandardMaterial({ color: accent, roughness: 0.75 });
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.25 });
+      const pupilMat = new THREE.MeshStandardMaterial({ color: 0x101010 });
+
+      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.7, 1.25, 8, 14), bodyMat);
+      torso.position.y = 1.55;
+      torso.castShadow = true;
+      group.add(torso);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.58, 24, 18), bodyMat);
+      head.position.y = 2.68;
+      head.castShadow = true;
+      group.add(head);
+
+      const hair = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.28, 0.78), darkMat);
+      hair.position.set(0, 3.08, -0.05);
+      hair.castShadow = true;
+      group.add(hair);
+
+      const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), eyeMat);
+      eyeL.position.set(-0.22, 2.72, -0.5);
+      const eyeR = eyeL.clone();
+      eyeR.position.x = 0.22;
+      group.add(eyeL, eyeR);
+
+      const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), pupilMat);
+      pupilL.position.set(-0.22, 2.71, -0.59);
+      const pupilR = pupilL.clone();
+      pupilR.position.x = 0.22;
+      group.add(pupilL, pupilR);
+
+      const armGeo = new THREE.CapsuleGeometry(0.16, 1.0, 6, 10);
+      const armL = new THREE.Mesh(armGeo, bodyMat);
+      armL.position.set(-0.72, 1.7, -0.04);
+      armL.rotation.z = -0.36;
+      armL.castShadow = true;
+      const armR = armL.clone();
+      armR.position.x = 0.72;
+      armR.rotation.z = 0.36;
+      group.add(armL, armR);
+
+      const legGeo = new THREE.CapsuleGeometry(0.18, 0.95, 6, 10);
+      const legL = new THREE.Mesh(legGeo, darkMat);
+      legL.position.set(-0.28, 0.55, 0);
+      legL.rotation.z = 0.12;
+      legL.castShadow = true;
+      const legR = legL.clone();
+      legR.position.x = 0.28;
+      legR.rotation.z = -0.12;
+      group.add(legL, legR);
+
+      if (isPlayer) {
+        const gun = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 1.38), new THREE.MeshStandardMaterial({
+          color: 0x2b2f36,
+          metalness: 0.35,
+          roughness: 0.38
+        }));
+        gun.position.set(0.45, 1.75, -0.86);
+        gun.castShadow = true;
+        group.add(gun);
+
+        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9, 12), new THREE.MeshStandardMaterial({
+          color: 0xffbd3f,
+          emissive: 0x5d3100,
+          emissiveIntensity: 0.4
+        }));
+        barrel.rotation.x = Math.PI / 2;
+        barrel.position.set(0.45, 1.75, -1.82);
+        group.add(barrel);
+      }
+
+      group.userData = { bob: Math.random() * Math.PI * 2 };
+      return group;
+    }
+
+    function resetGame() {
+      world.score = 0;
+      world.wave = 1;
+      world.spawnTimer = 0.4;
+      world.dashTimer = 0;
+      player.hp = 100;
+      player.heat = 0;
+      player.cooldown = 0;
+      player.invuln = 0;
+      player.body.position.set(0, 0, 0);
+      player.body.rotation.set(0, 0, 0);
+      clearDynamic();
+      updateHud();
+      positionCamera();
+    }
+
+    function clearDynamic() {
+      for (const item of [...bullets, ...enemies, ...bursts]) {
+        scene.remove(item.mesh || item.body || item.group);
+      }
+      bullets.length = 0;
+      enemies.length = 0;
+      bursts.length = 0;
+    }
+
+    function startGame() {
+      resetGame();
+      world.state = "playing";
+      panel.hidden = true;
+      hintEl.textContent = "WASD to move. Aim with mouse. Hold click to fire. Space to dash.";
+    }
+
+    function gameOver() {
+      if (world.state !== "playing") return;
+      world.state = "over";
+      world.best = Math.max(world.best, world.score);
+      localStorage.setItem("outbackRushBest", String(world.best));
+      lastScoreEl.textContent = world.score;
+      bestScoreEl.textContent = world.best;
+      startBtn.textContent = "Restart";
+      copyEl.textContent = `You reached wave ${world.wave} with ${world.score} points.`;
+      panel.hidden = false;
+      spawnBurst(player.body.position, 0xff4d4d, 28, 1.5);
+    }
+
+    function spawnEnemy() {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = world.arena - 2;
+      const isHeavy = Math.random() < Math.min(0.12 + world.wave * 0.025, 0.34);
+      const body = makeFighter(isHeavy ? 0xff4d4d : 0x5dff9d, isHeavy ? 0x3b1111 : 0x123d2d, false);
+      body.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+      body.scale.setScalar(isHeavy ? 1.22 : 0.92);
+      scene.add(body);
+      enemies.push({
+        body,
+        hp: isHeavy ? 6 + Math.floor(world.wave / 2) : 3 + Math.floor(world.wave / 4),
+        speed: isHeavy ? 3.7 + world.wave * 0.18 : 5.1 + world.wave * 0.22,
+        heavy: isHeavy,
+        hit: 0,
+        bite: 0
+      });
+    }
+
+    function shoot(dt) {
+      player.cooldown -= dt;
+      if (!world.shooting || player.cooldown > 0 || player.heat > 94) return;
+
+      const origin = player.body.position.clone();
+      origin.y = 1.75;
+      const dir = aimPoint.clone().sub(player.body.position);
+      dir.y = 0;
+      if (dir.lengthSq() < 0.01) dir.set(0, 0, -1);
+      dir.normalize();
+
+      const spread = (Math.random() - 0.5) * 0.08;
+      dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), spread);
+
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 12, 8),
+        new THREE.MeshStandardMaterial({ color: 0xfff0a8, emissive: 0xffbd3f, emissiveIntensity: 1.4 })
+      );
+      mesh.position.copy(origin).addScaledVector(dir, 1.7);
+      scene.add(mesh);
+      bullets.push({ mesh, dir, life: 1.1, speed: 35 });
+
+      spawnBurst(mesh.position, 0xffbd3f, 4, 0.28);
+      player.heat += 5.2;
+      player.cooldown = 0.065;
+    }
+
+    function update(dt) {
+      const t = performance.now() / 1000;
+      for (const prop of props) {
+        if (prop.geometry.type === "ConeGeometry") prop.rotation.y += dt * 0.35;
+      }
+
+      updateBursts(dt);
+
+      if (world.state !== "playing") {
+        player.body.rotation.y += dt * 0.35;
+        player.body.position.y = Math.sin(t * 2.4) * 0.08;
+        positionCamera();
+        return;
+      }
+
+      world.wave = 1 + Math.floor(world.score / 180);
+      world.spawnTimer -= dt;
+      while (world.spawnTimer <= 0) {
+        spawnEnemy();
+        world.spawnTimer += Math.max(0.34, 1.05 - world.wave * 0.055);
+      }
+
+      movePlayer(dt);
+      aimPlayer();
+      shoot(dt);
+      updateBullets(dt);
+      updateEnemies(dt);
+
+      player.heat = Math.max(0, player.heat - (world.shooting ? 11 : 24) * dt);
+      player.invuln = Math.max(0, player.invuln - dt);
+      world.dashTimer = Math.max(0, world.dashTimer - dt);
+
+      if (player.hp <= 0) gameOver();
+      updateHud();
+      positionCamera();
+    }
+
+    function movePlayer(dt) {
+      const x = (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) - (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0);
+      const z = (keys.has("KeyS") || keys.has("ArrowDown") ? 1 : 0) - (keys.has("KeyW") || keys.has("ArrowUp") ? 1 : 0);
+      const move = new THREE.Vector3(x, 0, z);
+      if (move.lengthSq() > 0) {
+        move.normalize();
+        const speed = player.speed * (world.dashTimer > 0 ? 2.4 : 1);
+        player.body.position.addScaledVector(move, speed * dt);
+      }
+
+      const len = Math.hypot(player.body.position.x, player.body.position.z);
+      if (len > world.arena - 1.5) {
+        player.body.position.multiplyScalar((world.arena - 1.5) / len);
+      }
+
+      player.body.position.y = Math.sin(performance.now() / 115) * 0.05;
+    }
+
+    function aimPlayer() {
+      raycaster.setFromCamera(mouse, camera);
+      raycaster.ray.intersectPlane(aimPlane, aimPoint);
+      const dx = aimPoint.x - player.body.position.x;
+      const dz = aimPoint.z - player.body.position.z;
+      if (Math.hypot(dx, dz) > 0.1) {
+        player.body.rotation.y = Math.atan2(dx, dz);
+      }
+    }
+
+    function updateBullets(dt) {
+      for (let i = bullets.length - 1; i >= 0; i -= 1) {
+        const b = bullets[i];
+        b.mesh.position.addScaledVector(b.dir, b.speed * dt);
+        b.life -= dt;
+        let remove = b.life <= 0;
+
+        for (let j = enemies.length - 1; j >= 0 && !remove; j -= 1) {
+          const enemy = enemies[j];
+          const dist = b.mesh.position.distanceTo(enemy.body.position);
+          if (dist < (enemy.heavy ? 1.55 : 1.25)) {
+            enemy.hp -= 1;
+            enemy.hit = 0.12;
+            remove = true;
+            spawnBurst(b.mesh.position, 0xfff0a8, 8, 0.45);
+            if (enemy.hp <= 0) {
+              const points = enemy.heavy ? 42 : 24;
+              world.score += points;
+              spawnBurst(enemy.body.position, enemy.heavy ? 0xff4d4d : 0x5dff9d, enemy.heavy ? 22 : 16, 1.0);
+              scene.remove(enemy.body);
+              enemies.splice(j, 1);
+            }
+          }
+        }
+
+        if (remove) {
+          scene.remove(b.mesh);
+          bullets.splice(i, 1);
+        }
+      }
+    }
+
+    function updateEnemies(dt) {
+      const p = player.body.position;
+      for (const enemy of enemies) {
+        const e = enemy.body.position;
+        const toPlayer = p.clone().sub(e);
+        toPlayer.y = 0;
+        const dist = toPlayer.length() || 1;
+        toPlayer.normalize();
+        e.addScaledVector(toPlayer, enemy.speed * dt);
+        enemy.body.rotation.y = Math.atan2(toPlayer.x, toPlayer.z);
+        enemy.body.position.y = Math.sin(performance.now() / 120 + enemy.body.userData.bob) * 0.08;
+        enemy.hit = Math.max(0, enemy.hit - dt);
+        enemy.bite = Math.max(0, enemy.bite - dt);
+        enemy.body.traverse((obj) => {
+          if (obj.material && obj.material.emissive) {
+            obj.material.emissiveIntensity = enemy.hit > 0 ? 1.8 : 0.25;
+          }
+        });
+
+        if (dist < (enemy.heavy ? 2.0 : 1.65) && enemy.bite <= 0 && player.invuln <= 0) {
+          player.hp -= enemy.heavy ? 18 : 10;
+          player.invuln = 0.28;
+          enemy.bite = 0.62;
+          spawnBurst(player.body.position, 0xff4d4d, 13, 0.55);
+        }
+      }
+    }
+
+    function spawnBurst(position, color, count, power) {
+      const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.2 });
+      for (let i = 0; i < count; i += 1) {
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.08 + Math.random() * 0.13, 8, 6), material.clone());
+        mesh.position.copy(position);
+        mesh.position.y += 0.8 + Math.random() * 0.8;
+        const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.9, Math.random() - 0.5).normalize();
+        scene.add(mesh);
+        bursts.push({ mesh, vel: dir.multiplyScalar((4 + Math.random() * 9) * power), life: 0.45 + Math.random() * 0.35, max: 0.8 });
+      }
+    }
+
+    function updateBursts(dt) {
+      for (let i = bursts.length - 1; i >= 0; i -= 1) {
+        const p = bursts[i];
+        p.mesh.position.addScaledVector(p.vel, dt);
+        p.vel.y -= 10 * dt;
+        p.life -= dt;
+        p.mesh.scale.setScalar(Math.max(0.05, p.life / p.max));
+        if (p.life <= 0) {
+          scene.remove(p.mesh);
+          bursts.splice(i, 1);
+        }
+      }
+    }
+
+    function positionCamera() {
+      const target = player.body.position;
+      camera.position.lerp(new THREE.Vector3(target.x, 21, target.z + 24), 0.08);
+      camera.lookAt(target.x, 1.3, target.z);
+    }
+
+    function updateHud() {
+      scoreEl.textContent = world.score;
+      waveEl.textContent = world.wave;
+      healthEl.textContent = Math.max(0, Math.round(player.hp));
+      heatEl.textContent = `${Math.round(player.heat)}%`;
+      healthBar.style.transform = `scaleX(${clamp(player.hp / 100, 0, 1)})`;
+      heatBar.style.transform = `scaleX(${clamp(player.heat / 100, 0, 1)})`;
+      if (player.heat > 94) hintEl.textContent = "Blaster overheated. Release fire to cool down.";
+    }
+
+    function animate() {
+      const dt = Math.min(clock.getDelta(), 0.033);
+      update(dt);
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function setMouse(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    window.addEventListener("pointermove", setMouse);
+    window.addEventListener("pointerdown", (event) => {
+      setMouse(event);
+      world.shooting = true;
+      if (world.state === "ready") startGame();
+    });
+    window.addEventListener("pointerup", () => {
+      world.shooting = false;
+      if (world.state === "playing") hintEl.textContent = "WASD to move. Aim with mouse. Hold click to fire. Space to dash.";
+    });
+    window.addEventListener("keydown", (event) => {
+      keys.add(event.code);
+      if ((event.code === "Enter" || event.code === "Space") && world.state !== "playing") startGame();
+      if (event.code === "Space" && world.state === "playing" && world.dashTimer <= 0) {
+        world.dashTimer = 0.16;
+        spawnBurst(player.body.position, 0xffbd3f, 12, 0.5);
+        event.preventDefault();
+      }
+    });
+    window.addEventListener("keyup", (event) => keys.delete(event.code));
+    startBtn.addEventListener("click", startGame);
+  </script>
+</body>
+</html>

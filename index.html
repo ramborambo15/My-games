@@ -97,7 +97,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
     }
 
@@ -139,6 +139,109 @@
     .preview.wing {
       background:
         linear-gradient(180deg, #72d4ff 0%, #dff7ff 68%, #59c86f 68%, #48aa5e 100%);
+    }
+
+    .preview.outback {
+      background:
+        linear-gradient(rgba(255, 247, 232, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 247, 232, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, #ffb35a 0%, #e07f38 55%, #9c5430 100%);
+      background-size: 34px 34px, 34px 34px, auto;
+    }
+
+    .mesa {
+      position: absolute;
+      bottom: 0;
+      width: 34%;
+      height: 48%;
+      background: linear-gradient(180deg, #d87832, #8f4327);
+      clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+      box-shadow: inset 0 14px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .mesa.one {
+      left: -6%;
+    }
+
+    .mesa.two {
+      right: -4%;
+      height: 38%;
+      background: linear-gradient(180deg, #a94f2a, #6f311f);
+    }
+
+    .hero-3d {
+      position: absolute;
+      left: 42%;
+      top: 33%;
+      width: 80px;
+      height: 96px;
+      transform-style: preserve-3d;
+      transform: rotateX(58deg) rotateZ(-34deg);
+    }
+
+    .hero-3d span {
+      position: absolute;
+      display: block;
+      border-radius: 8px;
+      background: #ffdd72;
+      box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.22);
+    }
+
+    .hero-3d .head {
+      left: 24px;
+      top: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+    }
+
+    .hero-3d .body {
+      left: 18px;
+      top: 34px;
+      width: 42px;
+      height: 52px;
+      background: #fff0a8;
+    }
+
+    .hero-3d .blaster {
+      left: 52px;
+      top: 45px;
+      width: 62px;
+      height: 14px;
+      background: #2b2f36;
+      box-shadow: 22px 0 0 -4px #ffbd3f;
+    }
+
+    .enemy-orb {
+      position: absolute;
+      width: 44px;
+      height: 62px;
+      border-radius: 48% 48% 12px 12px;
+      background: #5dff9d;
+      box-shadow: 10px 12px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .enemy-orb.one {
+      right: 22%;
+      top: 27%;
+    }
+
+    .enemy-orb.two {
+      left: 18%;
+      bottom: 18%;
+      background: #ff4d4d;
+    }
+
+    .blast {
+      position: absolute;
+      left: 52%;
+      top: 43%;
+      width: 30%;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #fff0a8, #ffbd3f, transparent);
+      transform: rotate(-10deg);
+      box-shadow: 0 0 24px rgba(255, 189, 63, 0.9);
     }
 
     .sun {
@@ -389,6 +492,12 @@
         min-height: 220px;
       }
     }
+
+    @media (min-width: 761px) and (max-width: 980px) {
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
   </style>
 </head>
 <body>
@@ -400,6 +509,33 @@
     </section>
 
     <section class="grid" aria-label="Games">
+      <a class="card" href="outback-rush-3d.html">
+        <div class="preview outback" aria-hidden="true">
+          <div class="mesa one"></div>
+          <div class="mesa two"></div>
+          <div class="blast"></div>
+          <div class="enemy-orb one"></div>
+          <div class="enemy-orb two"></div>
+          <div class="hero-3d">
+            <span class="head"></span>
+            <span class="body"></span>
+            <span class="blaster"></span>
+          </div>
+        </div>
+        <div class="content">
+          <div>
+            <h2>Outback Rush 3D</h2>
+            <p>A chaotic 3D desert action game with original cartoon fighters, enemy waves, dashing, and blaster heat.</p>
+            <div class="meta">
+              <span>3D</span>
+              <span>Action</span>
+              <span>Mouse aim</span>
+            </div>
+          </div>
+          <div class="play">Play Outback Rush 3D</div>
+        </div>
+      </a>
+
       <a class="card" href="stick-shooter.html">
         <div class="preview shooter" aria-hidden="true">
           <div class="beam"></div>
