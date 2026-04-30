@@ -2,17 +2,10 @@
 
 An original browser voxel sandbox inspired by block-building survival games.
 
-## Run Locally
 
-```powershell
-cd C:\Users\jhale\Documents\Codex\2026-04-27\hello\voxel-realm
-node server.js
 ```
 
-Open:
 
-```text
-http://127.0.0.1:8091/
 ```
 
 ## Controls
