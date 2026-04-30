@@ -302,6 +302,59 @@
       box-shadow: 0 0 22px rgba(255, 61, 88, 0.7);
     }
 
+    .preview.voxel {
+      background:
+        linear-gradient(180deg, #8fcfff 0%, #d7f5ff 56%, #5fbf62 56%, #428443 100%);
+    }
+
+    .voxel-stack {
+      position: absolute;
+      left: 13%;
+      right: 11%;
+      bottom: 12%;
+      height: 58%;
+      transform: perspective(260px) rotateX(55deg) rotateZ(-33deg);
+      transform-style: preserve-3d;
+    }
+
+    .cube {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      background: var(--c);
+      box-shadow: inset -10px -10px 0 rgba(0, 0, 0, 0.18), 9px 9px 0 rgba(0, 0, 0, 0.18);
+    }
+
+    .cube.one { left: 26%; top: 30%; --c: #56b85a; }
+    .cube.two { left: 42%; top: 30%; --c: #56b85a; }
+    .cube.three { left: 58%; top: 30%; --c: #56b85a; }
+    .cube.four { left: 34%; top: 48%; --c: #8a603f; }
+    .cube.five { left: 50%; top: 48%; --c: #8d8f98; }
+    .cube.six { left: 66%; top: 48%; --c: #c9a66b; }
+
+    .voxel-pick {
+      position: absolute;
+      left: 50%;
+      top: 26%;
+      width: 76px;
+      height: 14px;
+      border-radius: 999px;
+      background: #5b3a24;
+      transform: rotate(-35deg);
+      box-shadow: 0 0 0 5px rgba(255,255,255,0.14);
+    }
+
+    .voxel-pick::after {
+      content: "";
+      position: absolute;
+      right: -18px;
+      top: -10px;
+      width: 28px;
+      height: 34px;
+      background: #8d8f98;
+      clip-path: polygon(0 0, 100% 35%, 74% 100%, 24% 100%);
+    }
+
     .mesa {
       position: absolute;
       bottom: 0;
@@ -662,6 +715,32 @@
     </section>
 
     <section class="grid" aria-label="Games">
+      <a class="card" href="voxel-realm/">
+        <div class="preview voxel" aria-hidden="true">
+          <div class="voxel-pick"></div>
+          <div class="voxel-stack">
+            <div class="cube one"></div>
+            <div class="cube two"></div>
+            <div class="cube three"></div>
+            <div class="cube four"></div>
+            <div class="cube five"></div>
+            <div class="cube six"></div>
+          </div>
+        </div>
+        <div class="content">
+          <div>
+            <h2>Voxel Realm</h2>
+            <p>An original block-building sandbox with generated terrain, first-person exploring, mining, placing, jumping, trees, water, and a hotbar.</p>
+            <div class="meta">
+              <span>Sandbox</span>
+              <span>Blocks</span>
+              <span>Build</span>
+            </div>
+          </div>
+          <div class="play">Play Voxel Realm</div>
+        </div>
+      </a>
+
       <a class="card" href="prism-dash/">
         <div class="preview prism" aria-hidden="true">
           <div class="prism-ground"></div>
