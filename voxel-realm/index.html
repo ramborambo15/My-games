@@ -5,42 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Voxel Realm</title>
   <link rel="stylesheet" href="./styles.css">
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js"
-      }
-    }
-  </script>
 </head>
 <body>
-  <div id="game"></div>
-  <div class="shade" aria-hidden="true"></div>
-
-  <div class="crosshair" aria-hidden="true"></div>
+  <canvas id="game" width="960" height="540"></canvas>
 
   <header class="hud" aria-hidden="true">
     <div class="metric"><span>Block</span><strong id="blockName">Grass</strong></div>
-    <div class="metric"><span>Mode</span><strong id="mode">Explore</strong></div>
-    <div class="metric"><span>Pos</span><strong id="pos">0 0 0</strong></div>
+    <div class="metric"><span>Mode</span><strong id="mode">Build</strong></div>
+    <div class="metric"><span>Pos</span><strong id="pos">0 0</strong></div>
   </header>
 
   <section class="panel" id="menu">
     <p class="eyebrow">Original voxel sandbox</p>
     <h1>Voxel Realm</h1>
-    <p class="copy">Explore a block world, dig terrain, place blocks, climb hills, and build whatever you want. Click the game to lock your mouse and start.</p>
-    <p class="copy warning" id="loadWarning" hidden>If this message stays here after a few seconds, open the game from your GitHub site or run the local server. Browsers often block this game when opened by double-clicking the file.</p>
+    <p class="copy">A reliable block-building sandbox. Move around, mine blocks, place blocks, and build on a generated world.</p>
     <div class="actions">
       <button id="startBtn" type="button">Play</button>
       <button class="ghost" id="resetBtn" type="button">Reset World</button>
     </div>
     <div class="keys">
       <span>WASD Move</span>
-      <span>Mouse Look</span>
+      <span>Mouse Aim</span>
       <span>Left Mine</span>
       <span>Right Place</span>
-      <span>Space Jump</span>
       <span>1-6 Blocks</span>
+      <span>Wheel Zoom</span>
     </div>
   </section>
 
@@ -53,17 +42,6 @@
     <button class="slot" data-slot="5" type="button"><i style="--c:#5b3a24"></i><span>6</span></button>
   </footer>
 
-  <script>
-    window.voxelRealmLoaded = false;
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        if (!window.voxelRealmLoaded) {
-          const warning = document.getElementById("loadWarning");
-          if (warning) warning.hidden = false;
-        }
-      }, 1800);
-    });
-  </script>
-  <script type="module" src="./src/main.js"></script>
+  <script src="./src/main.js"></script>
 </body>
 </html>
