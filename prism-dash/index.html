@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prism Dash</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="game"></div>
+  <div class="glow" aria-hidden="true"></div>
+
+  <header class="hud" aria-hidden="true">
+    <div class="metric"><span>Score</span><strong id="score">0</strong></div>
+    <div class="metric"><span>Bolts</span><strong id="bolts">0</strong></div>
+    <div class="metric"><span>Speed</span><strong id="speed">0</strong></div>
+    <div class="metric"><span>Best</span><strong id="best">0</strong></div>
+  </header>
+
+  <section class="panel" id="menu">
+    <p class="eyebrow">Original high-speed platformer</p>
+    <h1>Prism Dash</h1>
+    <p class="copy">Race through floating chrome gardens, collect prism bolts, bounce over hazards, hit turbo pads, and keep your momentum alive.</p>
+    <div class="actions">
+      <button id="startBtn" type="button">Start</button>
+      <button class="ghost" id="soundBtn" type="button" aria-pressed="true">Sound On</button>
+    </div>
+    <div class="keys">
+      <span>Left / Right</span>
+      <span>Space Jump</span>
+      <span>Down Roll</span>
+      <span>R Restart</span>
+    </div>
+  </section>
+
+  <section class="panel small" id="over" hidden>
+    <p class="eyebrow">Run complete</p>
+    <h2>Try Again</h2>
+    <div class="results">
+      <div><span>Score</span><strong id="finalScore">0</strong></div>
+      <div><span>Bolts</span><strong id="finalBolts">0</strong></div>
+      <div><span>Distance</span><strong id="finalDistance">0 m</strong></div>
+      <div><span>Best</span><strong id="finalBest">0</strong></div>
+    </div>
+    <div class="actions">
+      <button id="restartBtn" type="button">Restart</button>
+      <button class="ghost" id="menuBtn" type="button">Menu</button>
+    </div>
+  </section>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

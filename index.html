@@ -226,6 +226,82 @@
       box-shadow: 0 0 22px rgba(255, 228, 94, 0.9);
     }
 
+    .preview.prism {
+      background:
+        radial-gradient(circle at 28% 30%, rgba(54, 232, 255, 0.38), transparent 28%),
+        radial-gradient(circle at 72% 24%, rgba(255, 75, 216, 0.24), transparent 24%),
+        linear-gradient(180deg, #7ee9ff 0%, #c7f6ff 48%, #6a82ff 100%);
+    }
+
+    .prism-ground {
+      position: absolute;
+      left: -8%;
+      right: -8%;
+      bottom: 12%;
+      height: 34%;
+      background: linear-gradient(180deg, #68ff9b 0 18%, #192a48 18% 100%);
+      transform: skewY(-6deg);
+      box-shadow: 0 -8px 24px rgba(104, 255, 155, 0.44);
+    }
+
+    .prism-orb {
+      position: absolute;
+      left: 33%;
+      bottom: 39%;
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 34% 28%, #f7fbff, #215dff 52%, #102061 100%);
+      box-shadow: 0 0 0 4px rgba(54, 232, 255, 0.46), 0 0 34px rgba(54, 232, 255, 0.7);
+    }
+
+    .prism-orb::after {
+      content: "";
+      position: absolute;
+      left: -64px;
+      top: 22px;
+      width: 72px;
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(54, 232, 255, 0.8));
+      filter: blur(1px);
+    }
+
+    .prism-bolt {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 5px solid #ffe15d;
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(255, 225, 93, 0.9);
+    }
+
+    .prism-bolt.one {
+      left: 56%;
+      top: 32%;
+    }
+
+    .prism-bolt.two {
+      left: 67%;
+      top: 25%;
+    }
+
+    .prism-bolt.three {
+      left: 78%;
+      top: 34%;
+    }
+
+    .prism-spike {
+      position: absolute;
+      right: 19%;
+      bottom: 42%;
+      width: 70px;
+      height: 38px;
+      background: #ff3d58;
+      clip-path: polygon(0 100%, 18% 0, 36% 100%, 54% 0, 72% 100%, 90% 0, 100% 100%);
+      box-shadow: 0 0 22px rgba(255, 61, 88, 0.7);
+    }
+
     .mesa {
       position: absolute;
       bottom: 0;
@@ -586,6 +662,29 @@
     </section>
 
     <section class="grid" aria-label="Games">
+      <a class="card" href="prism-dash/">
+        <div class="preview prism" aria-hidden="true">
+          <div class="prism-ground"></div>
+          <div class="prism-orb"></div>
+          <div class="prism-bolt one"></div>
+          <div class="prism-bolt two"></div>
+          <div class="prism-bolt three"></div>
+          <div class="prism-spike"></div>
+        </div>
+        <div class="content">
+          <div>
+            <h2>Prism Dash</h2>
+            <p>An original high-speed 3D platformer with momentum, rolling attacks, prism bolts, boost pads, gaps, and hazards.</p>
+            <div class="meta">
+              <span>Speed</span>
+              <span>Platformer</span>
+              <span>3D</span>
+            </div>
+          </div>
+          <div class="play">Play Prism Dash</div>
+        </div>
+      </a>
+
       <a class="card" href="neon-drift-skyfall/">
         <div class="preview neon" aria-hidden="true">
           <div class="neon-track"></div>
