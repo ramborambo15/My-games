@@ -57,6 +57,7 @@ const player = {
   pitch: 0,
   grounded: false,
   selected: 0,
+  playing: false,
   locked: false
 };
 
@@ -233,12 +234,16 @@ function createMesh(x, y, z, id) {
 
 function start() {
   ensureAudio();
+  player.playing = true;
   dom.menu.hidden = true;
   lockPointer();
 }
 
 function lockPointer() {
-  renderer.domElement.requestPointerLock?.();
+  const request = renderer.domElement.requestPointerLock?.();
+  if (request?.catch) request.catch(() => {
+    player.locked = false;
+  });
 }
 
 function update(dt) {
@@ -392,7 +397,7 @@ function animateWorld(dt) {
 function updateHud() {
   const block = BLOCKS[player.selected];
   dom.blockName.textContent = block.name;
-  dom.mode.textContent = player.locked ? "Build" : "Menu";
+  dom.mode.textContent = player.locked ? "Build" : player.playing ? "Click" : "Menu";
   dom.pos.textContent = `${Math.floor(player.position.x)} ${Math.floor(player.position.y)} ${Math.floor(player.position.z)}`;
 }
 
@@ -437,7 +442,7 @@ window.addEventListener("resize", () => {
 
 document.addEventListener("pointerlockchange", () => {
   player.locked = document.pointerLockElement === renderer.domElement;
-  dom.menu.hidden = player.locked;
+  dom.menu.hidden = player.playing;
 });
 
 window.addEventListener("mousemove", (event) => {
@@ -459,6 +464,10 @@ window.addEventListener("keydown", (event) => {
 window.addEventListener("keyup", (event) => keys.delete(event.code));
 
 window.addEventListener("mousedown", (event) => {
+  if (!player.playing) {
+    start();
+    return;
+  }
   if (!player.locked) {
     lockPointer();
     return;
@@ -471,6 +480,10 @@ window.addEventListener("contextmenu", (event) => event.preventDefault());
 
 dom.startBtn.addEventListener("click", start);
 dom.resetBtn.addEventListener("click", generateWorld);
+renderer.domElement.addEventListener("click", () => {
+  if (!player.playing) start();
+  else if (!player.locked) lockPointer();
+});
 dom.slots.forEach((slot, i) => {
   slot.addEventListener("click", () => {
     player.selected = i;
