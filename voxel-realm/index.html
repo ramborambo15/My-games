@@ -29,6 +29,7 @@
     <p class="eyebrow">Original voxel sandbox</p>
     <h1>Voxel Realm</h1>
     <p class="copy">Explore a block world, dig terrain, place blocks, climb hills, and build whatever you want. Click the game to lock your mouse and start.</p>
+    <p class="copy warning" id="loadWarning" hidden>If this message stays here after a few seconds, open the game from your GitHub site or run the local server. Browsers often block this game when opened by double-clicking the file.</p>
     <div class="actions">
       <button id="startBtn" type="button">Play</button>
       <button class="ghost" id="resetBtn" type="button">Reset World</button>
@@ -52,6 +53,17 @@
     <button class="slot" data-slot="5" type="button"><i style="--c:#5b3a24"></i><span>6</span></button>
   </footer>
 
+  <script>
+    window.voxelRealmLoaded = false;
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        if (!window.voxelRealmLoaded) {
+          const warning = document.getElementById("loadWarning");
+          if (warning) warning.hidden = false;
+        }
+      }, 1800);
+    });
+  </script>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

@@ -58,7 +58,8 @@ const player = {
   grounded: false,
   selected: 0,
   playing: false,
-  locked: false
+  locked: false,
+  dragging: false
 };
 
 const groups = {
@@ -69,6 +70,7 @@ const groups = {
 scene.add(groups.blocks, groups.effects, groups.clouds);
 
 let audio = null;
+window.voxelRealmLoaded = true;
 
 setupLights();
 setupMaterials();
@@ -446,9 +448,11 @@ document.addEventListener("pointerlockchange", () => {
 });
 
 window.addEventListener("mousemove", (event) => {
-  if (!player.locked) return;
-  player.yaw -= event.movementX * 0.0022;
-  player.pitch -= event.movementY * 0.0022;
+  if (!player.locked && !player.dragging) return;
+  const mx = player.locked ? event.movementX : event.movementX;
+  const my = player.locked ? event.movementY : event.movementY;
+  player.yaw -= mx * 0.0022;
+  player.pitch -= my * 0.0022;
   player.pitch = Math.max(-1.45, Math.min(1.45, player.pitch));
 });
 
@@ -469,11 +473,15 @@ window.addEventListener("mousedown", (event) => {
     return;
   }
   if (!player.locked) {
+    player.dragging = true;
     lockPointer();
-    return;
   }
   if (event.button === 0) mineBlock();
   if (event.button === 2) placeBlock();
+});
+
+window.addEventListener("mouseup", () => {
+  player.dragging = false;
 });
 
 window.addEventListener("contextmenu", (event) => event.preventDefault());
