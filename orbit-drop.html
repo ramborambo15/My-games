@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orbit Drop</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f7fbff;
+      --muted: #a8b7cf;
+      --panel: rgba(8, 12, 24, 0.76);
+      --line: rgba(247, 251, 255, 0.16);
+      --cyan: #37e8ff;
+      --pink: #ff4bd8;
+      --gold: #ffe36a;
+      --red: #ff4564;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #080c18;
+      color: var(--ink);
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(55, 232, 255, 0.22), transparent 26%),
+        radial-gradient(circle at 78% 16%, rgba(255, 75, 216, 0.18), transparent 22%),
+        linear-gradient(180deg, #101932, #080c18 70%, #130d26);
+    }
+
+    .frame {
+      position: relative;
+      width: min(100vw, 460px);
+      height: min(100vh, 760px);
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0b1022;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+      touch-action: manipulation;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 13px;
+      pointer-events: none;
+    }
+
+    .metric,
+    .hint,
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(10px);
+    }
+
+    .metric {
+      min-width: 78px;
+      padding: 8px 10px;
+    }
+
+    .metric span,
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .metric strong,
+    .stat strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 27px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hint {
+      max-width: 165px;
+      padding: 9px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 750;
+      text-align: right;
+    }
+
+    .panel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(calc(100% - 32px), 340px);
+      transform: translate(-50%, -50%);
+      padding: 18px;
+      text-align: center;
+      pointer-events: auto;
+    }
+
+    .panel[hidden] {
+      display: none;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 44px;
+      line-height: 0.9;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(55, 232, 255, 0.48), 0 0 42px rgba(255, 75, 216, 0.28);
+    }
+
+    .copy {
+      margin: 12px 0 14px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.38;
+      font-weight: 650;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    button {
+      appearance: none;
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 16px;
+      color: #07101d;
+      background: linear-gradient(135deg, var(--cyan), #a3f8ff);
+      font: inherit;
+      font-weight: 950;
+      cursor: pointer;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.24), 0 12px 24px rgba(55, 232, 255, 0.2);
+    }
+
+    @media (max-width: 520px) {
+      .frame {
+        width: 100vw;
+        height: 100vh;
+        border: 0;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame" id="frame">
+    <canvas id="game" width="460" height="760"></canvas>
+    <div class="hud" aria-hidden="true">
+      <div class="metric">
+        <span>Score</span>
+        <strong id="score">0</strong>
+      </div>
+      <div class="hint" id="hint">Tap, click, or Space to flip gravity.</div>
+    </div>
+    <section class="panel" id="panel">
+      <h1>Orbit Drop</h1>
+      <p class="copy" id="copy">Flip gravity to slip through neon orbit gates. Grab gems, skim close, and survive the speed climb.</p>
+      <div class="stats">
+        <div class="stat">
+          <span>Last</span>
+          <strong id="lastScore">0</strong>
+        </div>
+        <div class="stat">
+          <span>Best</span>
+          <strong id="bestScore">0</strong>
+        </div>
+      </div>
+      <button id="startBtn" type="button">Start</button>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const frame = document.getElementById("frame");
+    const panel = document.getElementById("panel");
+    const scoreEl = document.getElementById("score");
+    const hintEl = document.getElementById("hint");
+    const copyEl = document.getElementById("copy");
+    const lastScoreEl = document.getElementById("lastScore");
+    const bestScoreEl = document.getElementById("bestScore");
+    const startBtn = document.getElementById("startBtn");
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const ship = { x: 116, y: H * 0.5, vy: 0, r: 15, gravity: 1, angle: 0 };
+    const gates = [];
+    const gems = [];
+    const particles = [];
+    const stars = Array.from({ length: 72 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      s: 0.4 + Math.random() * 1.6,
+      v: 10 + Math.random() * 32
+    }));
+
+    let state = "ready";
+    let score = 0;
+    let best = Number(localStorage.getItem("orbitDropBest") || 0);
+    let lastTime = 0;
+    let speed = 178;
+    let spawnTimer = 0;
+    let combo = 0;
+    let shake = 0;
+    let audio = null;
+
+    bestScoreEl.textContent = best;
+
+    function reset() {
+      ship.y = H * 0.5;
+      ship.vy = 0;
+      ship.gravity = 1;
+      ship.angle = 0;
+      gates.length = 0;
+      gems.length = 0;
+      particles.length = 0;
+      score = 0;
+      speed = 178;
+      spawnTimer = 0.4;
+      combo = 0;
+      shake = 0;
+      updateScore();
+    }
+
+    function start() {
+      reset();
+      state = "playing";
+      panel.hidden = true;
+      hintEl.textContent = "Tap, click, or Space to flip gravity.";
+      flip();
+    }
+
+    function gameOver() {
+      if (state !== "playing") return;
+      state = "over";
+      best = Math.max(best, Math.floor(score));
+      localStorage.setItem("orbitDropBest", String(best));
+      lastScoreEl.textContent = Math.floor(score);
+      bestScoreEl.textContent = best;
+      copyEl.textContent = `You scored ${Math.floor(score)}. The orbit always wants one more run.`;
+      startBtn.textContent = "Restart";
+      hintEl.textContent = "Press Space, click, or tap to restart.";
+      panel.hidden = false;
+      shake = 1;
+      burst(ship.x, ship.y, "#ff4564", 36);
+      tone(90, 0.16, "sawtooth", 0.045);
+    }
+
+    function flip() {
+      if (state !== "playing") {
+        start();
+        return;
+      }
+      ship.gravity *= -1;
+      ship.vy = 250 * ship.gravity;
+      burst(ship.x - 8, ship.y, "#37e8ff", 10);
+      tone(ship.gravity > 0 ? 420 : 580, 0.045, "triangle", 0.024);
+    }
+
+    function spawnGate() {
+      const gap = Math.max(148, 205 - score * 0.015);
+      const center = 118 + Math.random() * (H - 236);
+      const gate = {
+        x: W + 34,
+        center,
+        gap,
+        width: 56,
+        passed: false,
+        near: false,
+        phase: Math.random() * Math.PI * 2
+      };
+      gates.push(gate);
+
+      if (Math.random() < 0.82) {
+        gems.push({ x: gate.x + 28, y: center, r: 8, phase: Math.random() * Math.PI * 2 });
+      }
+    }
+
+    function update(dt) {
+      stars.forEach((star) => {
+        star.x -= (star.v + speed * 0.08) * dt;
+        if (star.x < -8) {
+          star.x = W + 8;
+          star.y = Math.random() * H;
+        }
+      });
+
+      particles.forEach((p) => {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+      });
+      for (let i = particles.length - 1; i >= 0; i--) {
+        if (particles[i].life <= 0) particles.splice(i, 1);
+      }
+
+      if (state !== "playing") {
+        ship.y += Math.sin(performance.now() / 280) * 0.08;
+        return;
+      }
+
+      score += dt * (8 + speed * 0.08);
+      speed = Math.min(330, speed + dt * 5.8);
+      spawnTimer -= dt;
+      if (spawnTimer <= 0) {
+        spawnGate();
+        spawnTimer += Math.max(0.82, 1.35 - score * 0.0009);
+      }
+
+      ship.vy += 760 * ship.gravity * dt;
+      ship.y += ship.vy * dt;
+      ship.angle += ((ship.gravity > 0 ? 0.7 : -0.7) + ship.vy * 0.002 - ship.angle) * Math.min(1, dt * 8);
+
+      if (ship.y < ship.r + 12 || ship.y > H - ship.r - 12) {
+        ship.y = Math.max(ship.r + 12, Math.min(H - ship.r - 12, ship.y));
+        gameOver();
+      }
+
+      gates.forEach((g) => {
+        g.x -= speed * dt;
+        const top = g.center - g.gap / 2;
+        const bottom = g.center + g.gap / 2;
+        if (!g.passed && g.x + g.width < ship.x) {
+          g.passed = true;
+          score += 25 + combo * 4;
+          combo += 1;
+          updateScore();
+          tone(700 + combo * 10, 0.04, "sine", 0.018);
+        }
+        if (!g.near && Math.abs(g.x - ship.x) < 10 && Math.min(Math.abs(ship.y - top), Math.abs(ship.y - bottom)) < 18) {
+          g.near = true;
+          score += 35;
+          burst(ship.x, ship.y, "#ffe36a", 10);
+        }
+        const hitX = ship.x + ship.r > g.x && ship.x - ship.r < g.x + g.width;
+        const hitY = ship.y - ship.r < top || ship.y + ship.r > bottom;
+        if (hitX && hitY) gameOver();
+      });
+      for (let i = gates.length - 1; i >= 0; i--) {
+        if (gates[i].x < -90) gates.splice(i, 1);
+      }
+
+      gems.forEach((gem) => {
+        gem.x -= speed * dt;
+        gem.y += Math.sin(performance.now() / 220 + gem.phase) * 0.22;
+        if (Math.hypot(gem.x - ship.x, gem.y - ship.y) < ship.r + gem.r + 3) {
+          gem.dead = true;
+          score += 95 + combo * 8;
+          combo += 1;
+          burst(gem.x, gem.y, "#ffe36a", 18);
+          tone(880, 0.05, "triangle", 0.024);
+        }
+      });
+      for (let i = gems.length - 1; i >= 0; i--) {
+        if (gems[i].dead || gems[i].x < -40) gems.splice(i, 1);
+      }
+      updateScore();
+    }
+
+    function draw() {
+      ctx.save();
+      if (shake > 0) {
+        ctx.translate((Math.random() - 0.5) * shake * 12, (Math.random() - 0.5) * shake * 12);
+        shake = Math.max(0, shake - 0.035);
+      }
+
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, "#111a38");
+      bg.addColorStop(0.55, "#070c1b");
+      bg.addColorStop(1, "#170c2a");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      stars.forEach((star) => {
+        ctx.fillStyle = star.s > 1.2 ? "rgba(55,232,255,0.75)" : "rgba(255,255,255,0.55)";
+        ctx.fillRect(star.x, star.y, star.s, star.s);
+      });
+
+      drawGrid();
+      gates.forEach(drawGate);
+      gems.forEach(drawGem);
+      particles.forEach(drawParticle);
+      drawShip();
+
+      ctx.restore();
+    }
+
+    function drawGrid() {
+      ctx.strokeStyle = "rgba(55,232,255,0.09)";
+      ctx.lineWidth = 1;
+      for (let y = 34; y < H; y += 48) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawGate(g) {
+      const top = g.center - g.gap / 2;
+      const bottom = g.center + g.gap / 2;
+      const glow = Math.sin(performance.now() / 200 + g.phase) * 0.18 + 0.82;
+      const grad = ctx.createLinearGradient(g.x, 0, g.x + g.width, 0);
+      grad.addColorStop(0, "#ff4bd8");
+      grad.addColorStop(1, "#37e8ff");
+      ctx.fillStyle = grad;
+      ctx.shadowColor = "#37e8ff";
+      ctx.shadowBlur = 18 * glow;
+      roundRect(g.x, 0, g.width, top, 10);
+      ctx.fill();
+      roundRect(g.x, bottom, g.width, H - bottom, 10);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.fillRect(g.x + 12, 0, 4, top);
+      ctx.fillRect(g.x + g.width - 16, bottom, 4, H - bottom);
+    }
+
+    function drawGem(gem) {
+      ctx.save();
+      ctx.translate(gem.x, gem.y);
+      ctx.rotate(performance.now() / 280 + gem.phase);
+      ctx.fillStyle = "#ffe36a";
+      ctx.shadowColor = "#ffe36a";
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.moveTo(0, -11);
+      ctx.lineTo(10, 0);
+      ctx.lineTo(0, 11);
+      ctx.lineTo(-10, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawShip() {
+      ctx.save();
+      ctx.translate(ship.x, ship.y);
+      ctx.rotate(ship.angle);
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(3, 22, 20, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f7fbff";
+      ctx.shadowColor = "#37e8ff";
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      ctx.moveTo(22, 0);
+      ctx.lineTo(-14, -14);
+      ctx.lineTo(-8, 0);
+      ctx.lineTo(-14, 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = ship.gravity > 0 ? "#ff4bd8" : "#37e8ff";
+      ctx.beginPath();
+      ctx.arc(-3, 0, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawParticle(p) {
+      ctx.globalAlpha = Math.max(0, p.life / p.max);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function burst(x, y, color, count) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = 70 + Math.random() * 180;
+        const life = 0.22 + Math.random() * 0.32;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s,
+          size: 2 + Math.random() * 3,
+          color,
+          life,
+          max: life
+        });
+      }
+    }
+
+    function updateScore() {
+      scoreEl.textContent = Math.floor(score);
+    }
+
+    function tone(freq, duration, type, gain) {
+      try {
+        audio ||= new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audio.createOscillator();
+        const vol = audio.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        vol.gain.value = gain;
+        vol.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duration);
+        osc.connect(vol);
+        vol.connect(audio.destination);
+        osc.start();
+        osc.stop(audio.currentTime + duration);
+      } catch {}
+    }
+
+    function loop(time) {
+      const dt = Math.min(0.033, ((time - lastTime) / 1000) || 0);
+      lastTime = time;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function handle(event) {
+      event.preventDefault();
+      flip();
+    }
+
+    startBtn.addEventListener("click", start);
+    frame.addEventListener("pointerdown", (event) => {
+      if (event.target instanceof HTMLButtonElement) return;
+      handle(event);
+    });
+    window.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") handle(event);
+    });
+
+    reset();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

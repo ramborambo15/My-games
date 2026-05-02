@@ -307,6 +307,68 @@
         linear-gradient(180deg, #8fcfff 0%, #d7f5ff 56%, #5fbf62 56%, #428443 100%);
     }
 
+    .preview.orbit {
+      background:
+        radial-gradient(circle at 22% 28%, rgba(55, 232, 255, 0.34), transparent 26%),
+        radial-gradient(circle at 76% 22%, rgba(255, 75, 216, 0.28), transparent 24%),
+        linear-gradient(180deg, #111a38 0%, #070c1b 62%, #170c2a 100%);
+    }
+
+    .orbit-gate {
+      position: absolute;
+      right: 18%;
+      top: 0;
+      width: 54px;
+      height: 100%;
+      background: linear-gradient(180deg, #ff4bd8, #37e8ff);
+      box-shadow: 0 0 26px rgba(55, 232, 255, 0.62);
+    }
+
+    .orbit-gap {
+      position: absolute;
+      right: 15%;
+      top: 38%;
+      width: 76px;
+      height: 28%;
+      background: #070c1b;
+      border-top: 4px solid rgba(255, 255, 255, 0.28);
+      border-bottom: 4px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .orbit-ship {
+      position: absolute;
+      left: 23%;
+      top: 47%;
+      width: 64px;
+      height: 34px;
+      background: #f7fbff;
+      clip-path: polygon(100% 50%, 0 0, 20% 50%, 0 100%);
+      filter: drop-shadow(0 0 18px rgba(55, 232, 255, 0.82));
+      transform: rotate(-12deg);
+    }
+
+    .orbit-core {
+      position: absolute;
+      left: 30%;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ff4bd8;
+      box-shadow: 0 0 18px rgba(255, 75, 216, 0.9);
+    }
+
+    .orbit-gem {
+      position: absolute;
+      right: 38%;
+      top: 47%;
+      width: 22px;
+      height: 22px;
+      background: #ffe36a;
+      transform: rotate(45deg);
+      box-shadow: 0 0 20px rgba(255, 227, 106, 0.9);
+    }
+
     .voxel-stack {
       position: absolute;
       left: 13%;
@@ -715,6 +777,28 @@
     </section>
 
     <section class="grid" aria-label="Games">
+      <a class="card" href="orbit-drop.html">
+        <div class="preview orbit" aria-hidden="true">
+          <div class="orbit-gate"></div>
+          <div class="orbit-gap"></div>
+          <div class="orbit-gem"></div>
+          <div class="orbit-ship"></div>
+          <div class="orbit-core"></div>
+        </div>
+        <div class="content">
+          <div>
+            <h2>Orbit Drop</h2>
+            <p>A one-button neon gravity game. Flip direction, thread orbit gates, collect gems, and chase near-miss bonuses.</p>
+            <div class="meta">
+              <span>One-button</span>
+              <span>Arcade</span>
+              <span>High score</span>
+            </div>
+          </div>
+          <div class="play">Play Orbit Drop</div>
+        </div>
+      </a>
+
       <a class="card" href="voxel-realm/">
         <div class="preview voxel" aria-hidden="true">
           <div class="voxel-pick"></div>
