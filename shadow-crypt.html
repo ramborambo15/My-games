@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shadow Crypt: Wildwood</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f3efe5;
+      --muted: #b9ad9d;
+      --panel: rgba(22, 15, 12, 0.82);
+      --line: rgba(243, 239, 229, 0.18);
+      --red: #e04435;
+      --gold: #e8bf57;
+      --green: #62c46d;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #090806;
+      color: var(--ink);
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .screen {
+      position: relative;
+      width: min(100vw, 1120px);
+      height: min(100vh, 720px);
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
+    .hud {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      padding: 8px;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.82));
+    }
+
+    .cell,
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(8px);
+    }
+
+    .cell {
+      min-height: 54px;
+      display: grid;
+      place-items: center;
+      padding: 7px;
+      text-align: center;
+    }
+
+    .cell span,
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .cell strong,
+    .stat strong {
+      display: block;
+      margin-top: 3px;
+      color: var(--gold);
+      font-size: 25px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 0 #000;
+    }
+
+    .crosshair {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .crosshair::before,
+    .crosshair::after {
+      content: "";
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 1px 2px #000;
+    }
+
+    .crosshair::before { left: 11px; top: 2px; width: 2px; height: 20px; }
+    .crosshair::after { left: 2px; top: 11px; width: 20px; height: 2px; }
+
+    .panel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(calc(100% - 32px), 520px);
+      transform: translate(-50%, -50%);
+      padding: 22px;
+      text-align: center;
+      pointer-events: auto;
+    }
+
+    .panel[hidden] { display: none; }
+
+    .eyebrow {
+      width: fit-content;
+      margin: 0 auto 12px;
+      border: 1px solid rgba(232, 191, 87, 0.36);
+      border-radius: 8px;
+      padding: 7px 10px;
+      color: var(--gold);
+      background: rgba(232, 191, 87, 0.1);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      text-shadow: 0 5px 0 #000;
+    }
+
+    h1 { font-size: clamp(42px, 8vw, 76px); line-height: 0.9; }
+    h2 { font-size: clamp(36px, 7vw, 58px); line-height: 0.94; }
+
+    .copy {
+      max-width: 470px;
+      margin: 14px auto;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 650;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button {
+      appearance: none;
+      min-height: 43px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 16px;
+      color: #170e09;
+      background: linear-gradient(135deg, var(--gold), #fff0a1);
+      font: inherit;
+      font-weight: 950;
+      cursor: pointer;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.26), 0 12px 24px rgba(232, 191, 87, 0.2);
+    }
+
+    button.ghost {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    .keys,
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .keys span,
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.07);
+      color: #e9e1d4;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    @media (max-width: 720px) {
+      .screen { width: 100vw; height: 100vh; border: 0; border-radius: 0; }
+      .hud { grid-template-columns: repeat(3, 1fr); }
+      .keys, .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main class="screen" id="screen">
+    <canvas id="game" width="480" height="300"></canvas>
+    <div class="crosshair" aria-hidden="true"></div>
+    <footer class="hud" aria-hidden="true">
+      <div class="cell"><div><span>Health</span><strong id="health">100</strong></div></div>
+      <div class="cell"><div><span>Ammo</span><strong id="ammo">40</strong></div></div>
+      <div class="cell"><div><span>Level</span><strong id="level">1</strong></div></div>
+      <div class="cell"><div><span>Kills</span><strong id="kills">0</strong></div></div>
+      <div class="cell"><div><span>Score</span><strong id="score">0</strong></div></div>
+    </footer>
+
+    <section class="panel" id="menu">
+      <p class="eyebrow">Retro dungeon FPS</p>
+      <h1>Shadow Crypt:<br>Wildwood</h1>
+      <p class="copy">Fight through original dungeon and forest arenas. Find the exit sigil, grab supplies, and survive each level.</p>
+      <div class="keys">
+        <span>WASD Move</span>
+        <span>Mouse / Arrows Turn</span>
+        <span>Click / Space Shoot</span>
+        <span>E Open Exit</span>
+        <span>Shift Strafe</span>
+        <span>R Restart</span>
+      </div>
+      <div class="actions">
+        <button id="startBtn" type="button">Start</button>
+        <button class="ghost" id="soundBtn" type="button" aria-pressed="true">Sound On</button>
+      </div>
+    </section>
+
+    <section class="panel" id="over" hidden>
+      <p class="eyebrow" id="overEyebrow">Run ended</p>
+      <h2 id="overTitle">Game Over</h2>
+      <div class="stats">
+        <div class="stat"><span>Score</span><strong id="finalScore">0</strong></div>
+        <div class="stat"><span>Kills</span><strong id="finalKills">0</strong></div>
+        <div class="stat"><span>Level</span><strong id="finalLevel">1</strong></div>
+      </div>
+      <div class="actions">
+        <button id="restartBtn" type="button">Restart</button>
+        <button class="ghost" id="menuBtn" type="button">Menu</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const screenEl = document.getElementById("screen");
+    const menu = document.getElementById("menu");
+    const over = document.getElementById("over");
+    const healthEl = document.getElementById("health");
+    const ammoEl = document.getElementById("ammo");
+    const levelEl = document.getElementById("level");
+    const killsEl = document.getElementById("kills");
+    const scoreEl = document.getElementById("score");
+    const finalScoreEl = document.getElementById("finalScore");
+    const finalKillsEl = document.getElementById("finalKills");
+    const finalLevelEl = document.getElementById("finalLevel");
+    const overEyebrow = document.getElementById("overEyebrow");
+    const overTitle = document.getElementById("overTitle");
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const menuBtn = document.getElementById("menuBtn");
+    const soundBtn = document.getElementById("soundBtn");
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const FOV = Math.PI / 3;
+    const DEPTH = 18;
+    const TILE = 1;
+    const keys = new Set();
+    const sprites = [];
+    const particles = [];
+
+    const maps = [
+      {
+        name: "Crypt Gate",
+        theme: "dungeon",
+        data: [
+          "1111111111111111",
+          "1P000001000000E1",
+          "1011110101110101",
+          "1000010100010101",
+          "1111010111010101",
+          "1A00010000010001",
+          "1011101110111011",
+          "1000100000100001",
+          "1010111111101101",
+          "100010M000000001",
+          "1111111111111111"
+        ]
+      },
+      {
+        name: "Wildwood Ruins",
+        theme: "forest",
+        data: [
+          "222222222222222222",
+          "2P00000020000000E2",
+          "202222020222222202",
+          "200000020000000002",
+          "222202222220222202",
+          "2A0000000000200002",
+          "202222202222020222",
+          "200000200000020M02",
+          "202220222202220202",
+          "200000000000000002",
+          "222222222222222222"
+        ]
+      },
+      {
+        name: "Root Crypt",
+        theme: "forest",
+        data: [
+          "33333333333333333333",
+          "3P0000000300000000E3",
+          "30333303033333033303",
+          "30000303000003000003",
+          "33330303333303033333",
+          "3A000300000003000003",
+          "30333033303333333033",
+          "3000000000300000M033",
+          "30333333303033333033",
+          "300000A0000000000033",
+          "33333333333333333333"
+        ]
+      }
+    ];
+
+    const player = { x: 2, y: 2, angle: 0, health: 100, ammo: 40, fire: 0, hurt: 0 };
+    const game = { state: "menu", level: 0, kills: 0, score: 0, exitOpen: false, shake: 0, sound: true };
+    let map = [];
+    let theme = "dungeon";
+    let last = 0;
+    let audio = null;
+
+    function loadLevel(index) {
+      const src = maps[index];
+      theme = src.theme;
+      map = src.data.map((row, y) => row.split("").map((ch, x) => {
+        if (ch === "P") {
+          player.x = x + 0.5;
+          player.y = y + 0.5;
+          return "0";
+        }
+        if (ch === "A" || ch === "M") {
+          sprites.push({ type: ch === "A" ? "ammo" : "med", x: x + 0.5, y: y + 0.5, alive: true });
+          return "0";
+        }
+        if (ch === "E") return "E";
+        return ch;
+      }));
+      spawnEnemies(index);
+      player.angle = 0;
+      game.exitOpen = false;
+    }
+
+    function spawnEnemies(index) {
+      const count = 4 + index * 2;
+      let placed = 0;
+      while (placed < count) {
+        const y = 1 + Math.floor(Math.random() * (map.length - 2));
+        const x = 1 + Math.floor(Math.random() * (map[0].length - 2));
+        if (map[y][x] === "0" && Math.hypot(player.x - x, player.y - y) > 4) {
+          sprites.push({ type: "enemy", x: x + 0.5, y: y + 0.5, hp: 2 + index, alive: true, attack: 0, hit: 0 });
+          placed++;
+        }
+      }
+    }
+
+    function start() {
+      sprites.length = 0;
+      particles.length = 0;
+      player.health = 100;
+      player.ammo = 40;
+      player.fire = 0;
+      player.hurt = 0;
+      game.level = 0;
+      game.kills = 0;
+      game.score = 0;
+      game.state = "playing";
+      menu.hidden = true;
+      over.hidden = true;
+      loadLevel(0);
+      tone(120, 0.08, "sawtooth", 0.04);
+      tone(240, 0.12, "triangle", 0.025, 0.06);
+    }
+
+    function winLevel() {
+      game.score += 500 + player.health * 2 + player.ammo * 4;
+      if (game.level >= maps.length - 1) {
+        end(true);
+        return;
+      }
+      game.level++;
+      sprites.length = 0;
+      loadLevel(game.level);
+      tone(520, 0.12, "triangle", 0.035);
+    }
+
+    function end(won) {
+      game.state = "over";
+      over.hidden = false;
+      overEyebrow.textContent = won ? "Crypt cleared" : "Run ended";
+      overTitle.textContent = won ? "Victory" : "Game Over";
+      finalScoreEl.textContent = game.score;
+      finalKillsEl.textContent = game.kills;
+      finalLevelEl.textContent = game.level + 1;
+      tone(won ? 640 : 80, won ? 0.22 : 0.28, won ? "triangle" : "sawtooth", 0.05);
+    }
+
+    function wallAt(x, y) {
+      const mx = Math.floor(x);
+      const my = Math.floor(y);
+      if (my < 0 || my >= map.length || mx < 0 || mx >= map[0].length) return "1";
+      return map[my][mx];
+    }
+
+    function solid(x, y) {
+      const w = wallAt(x, y);
+      return w !== "0" && w !== "E";
+    }
+
+    function update(dt) {
+      player.fire = Math.max(0, player.fire - dt);
+      player.hurt = Math.max(0, player.hurt - dt);
+      game.shake = Math.max(0, game.shake - dt * 2.5);
+      particles.forEach((p) => {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+      });
+      for (let i = particles.length - 1; i >= 0; i--) if (particles[i].life <= 0) particles.splice(i, 1);
+      if (game.state !== "playing") return;
+
+      const turn = ((keys.has("ArrowRight") ? 1 : 0) - (keys.has("ArrowLeft") ? 1 : 0)) * 2.4 * dt;
+      player.angle += turn;
+
+      const forward = (keys.has("KeyW") ? 1 : 0) - (keys.has("KeyS") ? 1 : 0);
+      const strafe = (keys.has("KeyD") ? 1 : 0) - (keys.has("KeyA") ? 1 : 0);
+      const speed = keys.has("ShiftLeft") || keys.has("ShiftRight") ? 4.0 : 2.8;
+      const dx = (Math.cos(player.angle) * forward + Math.cos(player.angle + Math.PI / 2) * strafe) * speed * dt;
+      const dy = (Math.sin(player.angle) * forward + Math.sin(player.angle + Math.PI / 2) * strafe) * speed * dt;
+      move(dx, dy);
+
+      if (keys.has("Space")) shoot();
+      if (keys.has("KeyE") && wallAt(player.x, player.y) === "E") winLevel();
+
+      updateSprites(dt);
+      updateHud();
+      if (player.health <= 0) end(false);
+    }
+
+    function move(dx, dy) {
+      if (!solid(player.x + dx, player.y)) player.x += dx;
+      if (!solid(player.x, player.y + dy)) player.y += dy;
+    }
+
+    function updateSprites(dt) {
+      for (const s of sprites) {
+        if (!s.alive) continue;
+        const d = Math.hypot(s.x - player.x, s.y - player.y);
+        if (s.type === "enemy") {
+          s.attack = Math.max(0, s.attack - dt);
+          s.hit = Math.max(0, s.hit - dt);
+          if (d < 9 && hasLine(s.x, s.y, player.x, player.y)) {
+            const speed = 1.0 + game.level * 0.18;
+            const a = Math.atan2(player.y - s.y, player.x - s.x);
+            if (d > 0.75) {
+              const nx = s.x + Math.cos(a) * speed * dt;
+              const ny = s.y + Math.sin(a) * speed * dt;
+              if (!solid(nx, s.y)) s.x = nx;
+              if (!solid(s.x, ny)) s.y = ny;
+            } else if (s.attack <= 0) {
+              s.attack = 0.65;
+              player.health -= 8 + game.level * 3;
+              player.hurt = 0.22;
+              game.shake = 0.45;
+              tone(95, 0.055, "sawtooth", 0.03);
+            }
+          }
+        } else if (d < 0.55) {
+          s.alive = false;
+          if (s.type === "ammo") player.ammo += 18;
+          if (s.type === "med") player.health = Math.min(100, player.health + 30);
+          game.score += 75;
+          tone(s.type === "ammo" ? 420 : 520, 0.06, "triangle", 0.025);
+        }
+      }
+      const living = sprites.filter((s) => s.type === "enemy" && s.alive).length;
+      if (living === 0) game.exitOpen = true;
+    }
+
+    function shoot() {
+      if (player.fire > 0 || player.ammo <= 0) return;
+      player.fire = 0.22;
+      player.ammo--;
+      game.shake = 0.16;
+      tone(150, 0.035, "square", 0.028);
+
+      let best = null;
+      let bestScore = Infinity;
+      for (const s of sprites) {
+        if (s.type !== "enemy" || !s.alive) continue;
+        const dx = s.x - player.x;
+        const dy = s.y - player.y;
+        const dist = Math.hypot(dx, dy);
+        const ang = normalize(Math.atan2(dy, dx) - player.angle);
+        if (Math.abs(ang) < 0.12 && dist < bestScore && hasLine(player.x, player.y, s.x, s.y)) {
+          best = s;
+          bestScore = dist;
+        }
+      }
+      if (best) {
+        best.hp--;
+        best.hit = 0.14;
+        game.score += 25;
+        blood(best.x, best.y);
+        if (best.hp <= 0) {
+          best.alive = false;
+          game.kills++;
+          game.score += 175;
+        }
+      }
+    }
+
+    function hasLine(x1, y1, x2, y2) {
+      const steps = Math.ceil(Math.hypot(x2 - x1, y2 - y1) * 8);
+      for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        if (solid(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)) return false;
+      }
+      return true;
+    }
+
+    function blood(x, y) {
+      for (let i = 0; i < 12; i++) {
+        const a = Math.random() * Math.PI * 2;
+        particles.push({ x, y, vx: Math.cos(a) * 0.8, vy: Math.sin(a) * 0.8, life: 0.25 + Math.random() * 0.25 });
+      }
+    }
+
+    function castRay(angle) {
+      const sin = Math.sin(angle);
+      const cos = Math.cos(angle);
+      let dist = 0;
+      let hit = "0";
+      while (dist < DEPTH) {
+        dist += 0.035;
+        const x = player.x + cos * dist;
+        const y = player.y + sin * dist;
+        hit = wallAt(x, y);
+        if (hit !== "0") break;
+      }
+      return { dist, hit };
+    }
+
+    function draw() {
+      ctx.save();
+      if (game.shake > 0) ctx.translate((Math.random() - 0.5) * game.shake * 18, (Math.random() - 0.5) * game.shake * 18);
+      drawWorld();
+      drawSprites();
+      drawWeapon();
+      drawDamage();
+      ctx.restore();
+    }
+
+    function drawWorld() {
+      const ceiling = theme === "forest" ? "#3c5f73" : "#201715";
+      const floor = theme === "forest" ? "#25391f" : "#30231c";
+      ctx.fillStyle = ceiling;
+      ctx.fillRect(0, 0, W, H / 2);
+      ctx.fillStyle = floor;
+      ctx.fillRect(0, H / 2, W, H / 2);
+
+      const cols = W;
+      for (let x = 0; x < cols; x++) {
+        const rayAngle = player.angle - FOV / 2 + (x / cols) * FOV;
+        const ray = castRay(rayAngle);
+        const corrected = ray.dist * Math.cos(rayAngle - player.angle);
+        const wallH = Math.min(H, (H * 0.82) / corrected);
+        const y = H / 2 - wallH / 2;
+        ctx.fillStyle = wallColor(ray.hit, corrected);
+        ctx.fillRect(x, y, 1, wallH);
+        if (ray.hit === "E") {
+          ctx.fillStyle = game.exitOpen ? "rgba(98,196,109,0.75)" : "rgba(232,191,87,0.55)";
+          ctx.fillRect(x, y + wallH * 0.2, 1, wallH * 0.6);
+        }
+      }
+    }
+
+    function wallColor(hit, dist) {
+      const shade = Math.max(0.25, 1 - dist / DEPTH);
+      let base = [95, 73, 56];
+      if (theme === "forest") base = hit === "2" ? [60, 100, 54] : [72, 64, 46];
+      if (hit === "3") base = [63, 43, 37];
+      if (hit === "E") base = [115, 78, 32];
+      return `rgb(${base[0] * shade},${base[1] * shade},${base[2] * shade})`;
+    }
+
+    function drawSprites() {
+      const visible = sprites.filter((s) => s.alive).map((s) => {
+        const dx = s.x - player.x;
+        const dy = s.y - player.y;
+        return { ...s, dist: Math.hypot(dx, dy), angle: normalize(Math.atan2(dy, dx) - player.angle) };
+      }).filter((s) => Math.abs(s.angle) < FOV * 0.68 && hasLine(player.x, player.y, s.x, s.y)).sort((a, b) => b.dist - a.dist);
+
+      for (const s of visible) {
+        const size = Math.min(150, 180 / s.dist);
+        const sx = W / 2 + Math.tan(s.angle) * W * 0.75 - size / 2;
+        const sy = H / 2 - size * 0.45;
+        if (s.type === "enemy") drawEnemy(sx, sy, size, s.hit > 0);
+        else drawPickup(sx, sy, size, s.type);
+      }
+    }
+
+    function drawEnemy(x, y, size, hit) {
+      ctx.fillStyle = hit ? "#fff" : "#8e2f2a";
+      ctx.fillRect(x + size * 0.18, y + size * 0.22, size * 0.64, size * 0.72);
+      ctx.fillStyle = hit ? "#fff" : "#c24636";
+      ctx.fillRect(x + size * 0.28, y, size * 0.44, size * 0.32);
+      ctx.fillStyle = "#f0d36b";
+      ctx.fillRect(x + size * 0.35, y + size * 0.1, size * 0.1, size * 0.08);
+      ctx.fillRect(x + size * 0.55, y + size * 0.1, size * 0.1, size * 0.08);
+      ctx.fillStyle = "#24120f";
+      ctx.fillRect(x + size * 0.32, y + size * 0.46, size * 0.36, size * 0.12);
+    }
+
+    function drawPickup(x, y, size, type) {
+      ctx.fillStyle = type === "ammo" ? "#d7a441" : "#62c46d";
+      ctx.fillRect(x + size * 0.28, y + size * 0.34, size * 0.44, size * 0.44);
+      ctx.fillStyle = "#fff";
+      if (type === "med") {
+        ctx.fillRect(x + size * 0.45, y + size * 0.38, size * 0.1, size * 0.34);
+        ctx.fillRect(x + size * 0.34, y + size * 0.5, size * 0.32, size * 0.1);
+      } else {
+        ctx.fillRect(x + size * 0.36, y + size * 0.46, size * 0.28, size * 0.08);
+      }
+    }
+
+    function drawWeapon() {
+      const bob = Math.sin(performance.now() / 110) * 4;
+      const kick = player.fire > 0 ? 18 : 0;
+      ctx.fillStyle = "#2b2520";
+      ctx.fillRect(W / 2 - 48, H - 82 + bob + kick, 96, 72);
+      ctx.fillStyle = "#56483d";
+      ctx.fillRect(W / 2 - 24, H - 120 + bob + kick, 48, 92);
+      ctx.fillStyle = "#171310";
+      ctx.fillRect(W / 2 - 8, H - 146 + bob + kick, 16, 42);
+      if (player.fire > 0.15) {
+        ctx.fillStyle = "#fff0a0";
+        ctx.beginPath();
+        ctx.arc(W / 2, H - 154 + bob, 28, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawDamage() {
+      if (player.hurt <= 0) return;
+      ctx.fillStyle = `rgba(224, 68, 53, ${player.hurt * 1.8})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    function updateHud() {
+      healthEl.textContent = Math.max(0, Math.floor(player.health));
+      ammoEl.textContent = player.ammo;
+      levelEl.textContent = game.level + 1;
+      killsEl.textContent = game.kills;
+      scoreEl.textContent = game.score;
+    }
+
+    function normalize(a) {
+      while (a < -Math.PI) a += Math.PI * 2;
+      while (a > Math.PI) a -= Math.PI * 2;
+      return a;
+    }
+
+    function tone(freq, duration, type, gain, delay = 0) {
+      if (!game.sound) return;
+      try {
+        audio ||= new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audio.createOscillator();
+        const vol = audio.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        vol.gain.value = gain;
+        vol.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + delay + duration);
+        osc.connect(vol);
+        vol.connect(audio.destination);
+        osc.start(audio.currentTime + delay);
+        osc.stop(audio.currentTime + delay + duration);
+      } catch {}
+    }
+
+    function loop(time) {
+      const dt = Math.min(0.033, ((time - last) / 1000) || 0);
+      last = time;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener("keydown", (e) => {
+      keys.add(e.code);
+      if (["Space", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
+      if (e.code === "KeyR" && game.state === "over") start();
+    });
+    window.addEventListener("keyup", (e) => keys.delete(e.code));
+    window.addEventListener("mousedown", () => {
+      if (game.state === "playing") shoot();
+    });
+    screenEl.addEventListener("click", () => screenEl.requestPointerLock?.());
+    window.addEventListener("mousemove", (e) => {
+      if (document.pointerLockElement === screenEl && game.state === "playing") {
+        player.angle += e.movementX * 0.0024;
+      }
+    });
+
+    startBtn.addEventListener("click", start);
+    restartBtn.addEventListener("click", start);
+    menuBtn.addEventListener("click", () => {
+      game.state = "menu";
+      menu.hidden = false;
+      over.hidden = true;
+    });
+    soundBtn.addEventListener("click", () => {
+      game.sound = !game.sound;
+      soundBtn.textContent = game.sound ? "Sound On" : "Sound Off";
+      soundBtn.setAttribute("aria-pressed", String(game.sound));
+    });
+
+    loadLevel(0);
+    updateHud();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
