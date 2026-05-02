@@ -228,6 +228,7 @@
     const W = canvas.width;
     const H = canvas.height;
     const ship = { x: 116, y: H * 0.5, vy: 0, r: 15, gravity: 1, angle: 0 };
+    const physics = { gravity: 430, flipKick: 145, maxVy: 330 };
     const gates = [];
     const gems = [];
     const particles = [];
@@ -260,7 +261,7 @@
       particles.length = 0;
       score = 0;
       speed = 178;
-      spawnTimer = 0.4;
+      spawnTimer = 1.0;
       combo = 0;
       shake = 0;
       updateScore();
@@ -271,7 +272,6 @@
       state = "playing";
       panel.hidden = true;
       hintEl.textContent = "Tap, click, or Space to flip gravity.";
-      flip();
     }
 
     function gameOver() {
@@ -296,13 +296,13 @@
         return;
       }
       ship.gravity *= -1;
-      ship.vy = 250 * ship.gravity;
+      ship.vy = physics.flipKick * ship.gravity;
       burst(ship.x - 8, ship.y, "#37e8ff", 10);
       tone(ship.gravity > 0 ? 420 : 580, 0.045, "triangle", 0.024);
     }
 
     function spawnGate() {
-      const gap = Math.max(148, 205 - score * 0.015);
+      const gap = Math.max(164, 224 - score * 0.012);
       const center = 118 + Math.random() * (H - 236);
       const gate = {
         x: W + 34,
@@ -351,7 +351,8 @@
         spawnTimer += Math.max(0.82, 1.35 - score * 0.0009);
       }
 
-      ship.vy += 760 * ship.gravity * dt;
+      ship.vy += physics.gravity * ship.gravity * dt;
+      ship.vy = Math.max(-physics.maxVy, Math.min(physics.maxVy, ship.vy));
       ship.y += ship.vy * dt;
       ship.angle += ((ship.gravity > 0 ? 0.7 : -0.7) + ship.vy * 0.002 - ship.angle) * Math.min(1, dt * 8);
 
