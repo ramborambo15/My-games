@@ -375,6 +375,73 @@
       overflow: hidden;
     }
 
+    .preview.snake {
+      background: linear-gradient(145deg, #303a45, #161d25);
+    }
+
+    .snake-phone {
+      position: absolute;
+      left: 50%;
+      top: 48%;
+      width: 54%;
+      height: 72%;
+      border-radius: 26px 26px 34px 34px;
+      background: #1f2730;
+      border: 4px solid #101820;
+      transform: translate(-50%, -50%);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.06), 0 14px 28px rgba(0,0,0,0.35);
+    }
+
+    .snake-screen {
+      position: absolute;
+      left: 16%;
+      right: 16%;
+      top: 12%;
+      height: 48%;
+      background: #a9bf73;
+      border: 5px solid #101820;
+      box-shadow: inset 0 0 16px rgba(40,52,31,0.35);
+    }
+
+    .snake-line {
+      position: absolute;
+      left: 24%;
+      top: 31%;
+      width: 45%;
+      height: 12px;
+      background: #28341f;
+      box-shadow:
+        12px 0 0 #28341f,
+        24px 0 0 #28341f,
+        36px 0 0 #28341f,
+        36px 12px 0 #28341f,
+        36px 24px 0 #28341f;
+    }
+
+    .snake-food {
+      position: absolute;
+      right: 26%;
+      top: 24%;
+      width: 12px;
+      height: 12px;
+      background: #28341f;
+    }
+
+    .snake-keypad {
+      position: absolute;
+      left: 50%;
+      bottom: 11%;
+      width: 45%;
+      height: 25%;
+      transform: translateX(-50%);
+      background:
+        radial-gradient(circle at 50% 18%, #dce5ef 0 8%, transparent 9%),
+        radial-gradient(circle at 30% 52%, #dce5ef 0 8%, transparent 9%),
+        radial-gradient(circle at 70% 52%, #dce5ef 0 8%, transparent 9%),
+        radial-gradient(circle at 50% 82%, #dce5ef 0 8%, transparent 9%);
+      opacity: 0.9;
+    }
+
     .crypt-wall {
       position: absolute;
       inset: 0;
@@ -850,6 +917,29 @@
     </section>
 
     <section class="grid" aria-label="Games">
+      <a class="card" href="nokia-snake.html">
+        <div class="preview snake" aria-hidden="true">
+          <div class="snake-phone">
+            <div class="snake-screen"></div>
+            <div class="snake-line"></div>
+            <div class="snake-food"></div>
+            <div class="snake-keypad"></div>
+          </div>
+        </div>
+        <div class="content">
+          <div>
+            <h2>Brick Snake</h2>
+            <p>A retro phone-style Snake game with chunky pixels, speed levels, best score saving, and keyboard or touch controls.</p>
+            <div class="meta">
+              <span>Classic</span>
+              <span>Snake</span>
+              <span>Mobile</span>
+            </div>
+          </div>
+          <div class="play">Play Brick Snake</div>
+        </div>
+      </a>
+
       <a class="card" href="shadow-crypt.html">
         <div class="preview crypt" aria-hidden="true">
           <div class="crypt-wall"></div>
