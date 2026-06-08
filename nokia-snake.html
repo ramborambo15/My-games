@@ -321,12 +321,10 @@
     function step() {
       dir = nextDir;
       const head = snake[0];
-      const next = { x: head.x + dir.x, y: head.y + dir.y };
-
-      if (next.x < 0 || next.x >= cells || next.y < 0 || next.y >= cells) {
-        gameOver();
-        return;
-      }
+      const next = {
+        x: (head.x + dir.x + cells) % cells,
+        y: (head.y + dir.y + cells) % cells
+      };
 
       if (snake.some((p) => p.x === next.x && p.y === next.y)) {
         gameOver();
