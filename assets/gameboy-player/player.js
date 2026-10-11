@@ -53,12 +53,14 @@ function dbAccess(mode, id, value) {
   });
 }
 async function persist() { await dbAccess('readwrite',game.id,record); }
-async function exclusive(action) {
+async function exclusive(action, { preserveInput = false } = {}) {
   if (busy) return;
-  busy = true; releaseInput(); updateUI();
+  busy = true;
+  if (preserveInput) updateInput(); else releaseInput();
+  updateUI();
   try { await action(); }
   catch(error) { console.error(error); running = game ? WasmBoy.isPlaying() : false; message(error?.message || 'Something went wrong. Try loading the game again.',true); }
-  finally { busy = false; updateUI(); }
+  finally { busy = false; updateInput(); updateUI(); }
 }
 async function capture(slot) {
   if (!game || !WasmBoy.isLoadedAndStarted()) return;
@@ -238,7 +240,7 @@ window.addEventListener('pageshow',()=>{closing=false;});
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){releaseInput();if(game&&running&&!busy)exclusive(async()=>{await saveProgress('auto',false);message('Paused and saved while you were away. Tap Resume to continue.');});}
 });
-setInterval(()=>{if(game&&running&&!busy&&!document.hidden)exclusive(async()=>{await saveProgress('auto');});},20000);
+setInterval(()=>{if(game&&running&&!busy&&!document.hidden)exclusive(async()=>{await saveProgress('auto');}, { preserveInput:true });},20000);
 // Dropping a ROM is optional; the same picker works on computers and phones.
 document.addEventListener('dragover',event=>{event.preventDefault();});
 document.addEventListener('drop',event=>{event.preventDefault();if(!busy)loadGame(event.dataTransfer.files[0]);});
