@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10131b">
+  <meta name="description" content="Play your own Game Boy and Game Boy Color games in Rambo Arcade. Touch controls, autosave, and portable save backups.">
+  <title>Game Boy Player · Rambo Arcade</title>
+  <link rel="stylesheet" href="assets/gameboy-player/player.css">
+</head>
+<body>
+  <header class="topbar"><a href="index.html">← RAMBO ARCADE</a><span class="badge">POCKET CLASSICS</span></header>
+  <main>
+    <section class="player" aria-label="Game Boy player">
+      <div class="player-title"><div><p class="eyebrow">YOUR GAMES. ANYWHERE.</p><h1>Game Boy <span>Player.</span></h1></div><span id="console-mode" class="mode">GB + GBC</span></div>
+      <div id="console" class="console">
+        <div class="screen-surround">
+          <div class="screen-top"><span><i id="power-light"></i> POWER</span><span>RAMBO POCKET</span></div>
+          <div class="display">
+            <canvas id="screen" width="160" height="144" aria-label="Game display"></canvas>
+            <div id="screen-overlay" class="screen-overlay"><div class="pixel-icon" aria-hidden="true">▤</div><strong id="overlay-title">INSERT A GAME</strong><span id="overlay-help">Load a .gb or .gbc file to play</span></div>
+          </div>
+          <div class="screen-bottom"><span>DOT MATRIX • 160 × 144</span><button id="fullscreen" class="screen-button" aria-label="Toggle fullscreen">⛶</button></div>
+        </div>
+        <div class="game-strip"><span id="game-title">No cartridge loaded</span><span id="play-status">READY</span></div>
+        <div class="touch-controls">
+          <div id="dpad" class="dpad" role="group" aria-label="Directional pad">
+            <button class="up" data-pad="UP" aria-label="Up">▲</button><button class="left" data-pad="LEFT" aria-label="Left">◀</button><span class="pad-center" aria-hidden="true">●</span><button class="right" data-pad="RIGHT" aria-label="Right">▶</button><button class="down" data-pad="DOWN" aria-label="Down">▼</button>
+          </div>
+          <div class="ab-controls"><button data-button="B" aria-label="B button">B</button><button data-button="A" aria-label="A button">A</button></div>
+          <div class="system-controls"><button data-button="SELECT">SELECT</button><button data-button="START">START</button></div>
+          <div class="speaker" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <div class="play-toolbar"><button id="choose-game" class="primary">＋ Load game</button><button id="play" disabled>▶ Play</button><button id="sound" aria-pressed="true">♫ Sound on</button><button id="restart" disabled aria-label="Restart current game">↻ Restart</button></div>
+      <input id="rom-file" type="file" accept=".gb,.gbc" hidden>
+      <p id="message" role="status" aria-live="polite">Your game files stay on your device. Nothing is uploaded.</p>
+      <noscript>This player needs JavaScript enabled to run games.</noscript>
+    </section>
+    <aside>
+      <section class="panel saves"><div class="panel-heading"><h2>Pick up where you left off.</h2><span class="small-badge">SAVES</span></div><p>Autosave keeps your latest progress. Quick save gives you a separate point to return to.</p>
+        <div class="save-row"><div><strong>Autosave</strong><span id="auto-info">Load a game to get started</span></div><span class="save-dot" aria-hidden="true"></span></div>
+        <div class="save-row"><div><strong>Quick save</strong><span id="quick-info">No quick save yet</span></div><span aria-hidden="true">▣</span></div>
+        <div class="save-buttons"><button id="quick-save" disabled>Save now</button><button id="quick-load" disabled>Load quick save</button></div>
+        <div class="backup-buttons"><button id="export-save" disabled>↓ Export save</button><button id="import-save" disabled>↑ Import save</button></div>
+        <input id="save-file" type="file" accept=".json,.rambo-save" hidden>
+        <p class="fine">Saves belong to this browser on this device. Load the same game file next time to resume. Export a backup before clearing browser data or switching devices.</p>
+      </section>
+      <section class="panel controls-guide"><div class="panel-heading"><h2>Ready, player one.</h2><span class="small-badge">CONTROLS</span></div><dl><div><dt>Move</dt><dd><kbd>↑ ↓ ← →</kbd> or <kbd>W A S D</kbd></dd></div><div><dt>A / B</dt><dd><kbd>X</kbd> / <kbd>Z</kbd></dd></div><div><dt>Start / Select</dt><dd><kbd>Enter</kbd> / <kbd>Shift</kbd></dd></div><div><dt>Pause</dt><dd><kbd>P</kbd></dd></div></dl><p class="fine">On a phone, use the D-pad and buttons. Slide your thumb across the D-pad for diagonals; hold a direction and an action button together.</p></section>
+      <section class="panel getting-started"><h2>Bring your own cartridge.</h2><p>Choose a Game Boy <strong>.gb</strong> or Game Boy Color <strong>.gbc</strong> file from your computer or phone. Unzip compressed games first.</p><p class="fine">Game Boy Advance (.gba) files aren’t supported. No games are included.</p></section>
+    </aside>
+  </main>
+  <footer>Rambo Arcade • Powered by <a href="https://github.com/torch2424/wasmboy">WasmBoy</a> <span>· <a href="assets/gameboy-player/LICENSE.txt">GPL-3.0</a> · <a href="assets/gameboy-player/wasmboy-source.zip">Emulator source</a></span></footer>
+  <script type="module" src="assets/gameboy-player/player.js"></script>
+</body>
+</html>
