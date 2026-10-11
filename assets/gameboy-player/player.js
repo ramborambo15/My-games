@@ -1,10 +1,16 @@
 /* Rambo Arcade Game Boy Player — GPL-3.0-or-later. */
-import { WasmBoy } from './wasmboy.js';
+import { WasmBoy } from './wasmboy.js?v=restore-2';
 
 const $ = id => document.getElementById(id);
+const includedGames = Object.freeze({
+  'pokemon-crystal': {title:'Pokémon Crystal',name:'Pokémon Crystal.gbc',url:'games/pokemon-crystal-fdcc3c8c.gbc',help:'Start opens the menu. Use the D-pad to move, A to confirm, and B to go back.'},
+  'pong': {title:'Pong',name:'Pong.gb',url:'games/pong-d9a88547.gb',help:'Use Up and Down to move your paddle against the computer.'},
+  'minesweep': {title:'Minesweep',name:'Minesweep.gb',url:'games/minesweep-098427b0.gb',help:'Start begins a round. D-pad moves the cursor; A flags a square; B uncovers it. Press Start again after the game ends.'},
+  'acattag': {title:'ACATTAG',name:'ACATTAG.gb',url:'games/acattag-7167d67a.gb',help:'Start begins or pauses. Left/right move; A jumps; B scans and interacts. This prototype has some synthesis glitches.'}
+});
 const memorySizes = { wasmBoyInternalState: 1024, wasmBoyPaletteMemory: 128, gameBoyMemory: 65536 };
 function cartridgeRamSize(type) { return type>=1&&type<=3||type>=15&&type<=19?32768:type>=5&&type<=6?2048:type>=25&&type<=30?131072:0; }
-const ui = { load: $('choose-game'), play: $('play'), sound: $('sound'), restart: $('restart'), save: $('quick-save'), restore: $('quick-load'), export: $('export-save'), import: $('import-save') };
+const ui = { load: $('choose-game'), included: document.querySelectorAll('[data-included-game]'), play: $('play'), sound: $('sound'), restart: $('restart'), save: $('quick-save'), restore: $('quick-load'), export: $('export-save'), import: $('import-save') };
 let game = null, record = {}, busy = false, running = false, storage = null;
 let soundOn = true, initialized = false, restartPending = false, closing = false;
 const keysDown = new Set(), pointers = new Map();
@@ -14,6 +20,7 @@ function message(text, error = false) { $('message').textContent = text; $('mess
 function updatedAt(save) { return save ? new Date(save.date).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : null; }
 function updateUI() {
   ui.load.disabled = busy;
+  ui.included.forEach(button=>{button.disabled=busy;});
   for (const name of ['play','restart','save','export','import']) ui[name].disabled = busy || !game;
   ui.save.disabled = busy || !game || !WasmBoy.isLoadedAndStarted();
   ui.restore.disabled = busy || !game || !record.quick;
@@ -105,14 +112,16 @@ function validateROM(file,bytes) {
 }
 async function loadGame(file) {
   if (!file) return;
-  await exclusive(async () => {
+  await exclusive(() => loadGameFile(file));
+}
+async function loadGameFile(file) {
     message('Checking cartridge…');
     if (file.size > 0x7e0400) throw new Error('This player supports cartridges up to 4 MB. Choose a smaller .gb or .gbc file.');
     const bytes = new Uint8Array(await file.arrayBuffer()); validateROM(file,bytes);
     const digest = await crypto.subtle.digest('SHA-256',bytes);
     const id = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2,'0')).join('');
-    const nextRecord = await dbAccess('readonly',id) || {};
     if (game) await saveProgress('auto',false);
+    const nextRecord = await dbAccess('readonly',id) || {};
     await WasmBoy.config({ isGbcEnabled:true, isGbcColorizationEnabled:false, enableBootROMIfAvailable:false, disablePauseOnHidden:true, maxNumberOfAutoSaveStates:1, saveStateCallback:stashOnExit },$('screen'));
     game = null; running = false;
     message('Loading game…');
@@ -133,6 +142,31 @@ async function loadGame(file) {
     if (latest) { await WasmBoy.loadState(structuredClone(latest)); message('Saved progress found. Tap Resume to pick up where you left off.'); }
     else message('Game loaded. Tap Resume to play. Autosave will keep your progress.');
     setSound();
+}
+async function loadIncludedGame(id = 'pokemon-crystal') {
+  if (!Object.hasOwn(includedGames,id)) return;
+  const includedGame = includedGames[id];
+  await exclusive(async () => {
+    const wasRunning = running;
+    if (game) await saveProgress('auto',false);
+    message(`Downloading ${includedGame.title}…`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(),30000);
+    let bytes;
+    try {
+      const response = await fetch(includedGame.url,{ signal:controller.signal,credentials:'omit' });
+      if (!response.ok) throw new Error('Game download failed.');
+      const declaredSize = Number(response.headers.get('content-length'));
+      if (declaredSize > 0x7e0400) throw new Error('Game download is too large.');
+      bytes = await response.arrayBuffer();
+      if (bytes.byteLength > 0x7e0400) throw new Error('Game download is too large.');
+      validateROM({name:includedGame.name},new Uint8Array(bytes));
+    } catch(error) {
+      if (game) await keepPlaying(wasRunning);
+      throw new Error(`Couldn’t download ${includedGame.title}. Check your connection and tap its Load button to try again.`);
+    } finally { clearTimeout(timeout); }
+    await loadGameFile({name:includedGame.name,size:bytes.byteLength,arrayBuffer:async()=>bytes});
+    message(`${record.auto||record.quick?'Saved progress found. ':''}Tap Resume to play ${includedGame.title}. ${includedGame.help}`);
   });
 }
 function setSound() {
@@ -159,6 +193,7 @@ function validateBackup(data) {
   return result;
 }
 ui.load.addEventListener('click',()=>{$('rom-file').value='';$('rom-file').click();});
+ui.included.forEach(button=>button.addEventListener('click',()=>loadIncludedGame(button.dataset.includedGame)));
 $('rom-file').addEventListener('change',event=>loadGame(event.target.files[0]));
 ui.play.addEventListener('click',()=>exclusive(async()=>{
   if (!game) return;
@@ -245,6 +280,10 @@ setInterval(()=>{if(game&&running&&!busy&&!document.hidden)exclusive(async()=>{a
 document.addEventListener('dragover',event=>{event.preventDefault();});
 document.addEventListener('drop',event=>{event.preventDefault();if(!busy)loadGame(event.dataTransfer.files[0]);});
 try { storage=await openStorage(); }
-catch(error){message('Saving is unavailable in this browser. Enable browser storage and reload to use the player.',true);ui.load.disabled=true;console.error(error);}
-if(storage)updateUI();
+catch(error){message('Saving is unavailable in this browser. Enable browser storage and reload to use the player.',true);ui.load.disabled=true;ui.included.forEach(button=>{button.disabled=true;});console.error(error);}
+if(storage){
+  updateUI();
+  const selectedGame=new URLSearchParams(window.location.search).get('game');
+  if(Object.hasOwn(includedGames,selectedGame))await loadIncludedGame(selectedGame);
+}
 setSound();

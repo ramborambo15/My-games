@@ -1,0 +1,41 @@
+Rambo Arcade — ready-to-play Game Boy games
+
+Pong and Minesweep
+Author: Maximilien Dagois
+Licence: CC0 1.0 Universal (see licenses/CC0-1.0.txt)
+Project and source: https://github.com/mdagois/gca
+Pinned revision: 49044d198ceb668dd7afccb89f8c95a0d0cbb483
+ROM paths: prebuilt/games/pong/pong.gb and prebuilt/games/minesweep/minesweep.gb
+The project README explicitly includes these games in its CC0 dedication.
+The games use their own resources under games/*/res. The separate commercial
+Nostalgia Base Pack artwork in the repository's assets/ directory is not used
+by this arcade integration.
+
+ACATTAG (prototype)
+Author: Andrea Stewart
+Copyright (c) 2021 Andrea Stewart
+Licence: MIT (see licenses/ACATTAG-MIT.txt)
+Project and source: https://github.com/selkkie/acattag
+Author's page: https://selkkie.itch.io/acattag
+Pinned revision: ae2f19eadbb482d62c2a1f475f5c5646eeafd7e2
+ROM path: bin/ACATTAG.gb
+ZGB engine: Copyright (c) 2016 - 2018 Gonzalo de Santos Garcia,
+MIT licence (see licenses/ZGB-MIT.txt).
+Music playback: hUGEDriver by SuperDisk and contributors, public domain.
+https://github.com/SuperDisk/hUGEDriver
+The author describes this game as a prototype with some synthesis glitches.
+
+These free games are exact copies of their creators' public ROM files at
+the pinned revisions above. No third-party game code or ROM was modified.
+They are served from this arcade's games folder, with these SHA-256 hashes:
+Pong: d9a885470a2704c31af127f26c982a8a2dfe845de1a944e833c61d7af549ffc7
+Minesweep: 098427b0d165f0c998e3b4f7b3de35ebfe6b7b6540ee36fb112fc1e338685535
+ACATTAG: 7167d67a0c2c673beeb987936b821fa80c5be64c7403b8dee217de7e6126785f
+The third-party game licences are separate from the GPL player and emulator.
+Saved progress is kept independently for each ROM in the visitor's browser.
+
+Pokémon Crystal
+The site owner supplied this file and confirmed permission to redistribute it.
+This game is separate from the GPL player/emulator and the free games above.
+Asset: pokemon-crystal-fdcc3c8c.gbc
+SHA-256: fdcc3c8c43813cf8731fc037d2a6d191bac75439c34b24ba1c27526e6acdc8a2

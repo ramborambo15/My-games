@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#10131b">
-  <meta name="description" content="Play your own Game Boy and Game Boy Color games in Rambo Arcade. Touch controls, autosave, and portable save backups.">
+  <meta name="description" content="Play Game Boy games straight from Rambo Arcade, including free homebrew games. Phone controls, autosave, and save backups.">
   <title>Game Boy Player · Rambo Arcade</title>
-  <link rel="stylesheet" href="assets/gameboy-player/player.css">
+  <link rel="stylesheet" href="assets/gameboy-player/player.css?v=library-1">
 </head>
 <body>
   <header class="topbar"><a href="index.html">← RAMBO ARCADE</a><span class="badge">POCKET CLASSICS</span></header>
@@ -34,23 +34,30 @@
       </div>
       <div class="play-toolbar"><button id="choose-game" class="primary">＋ Load game</button><button id="play" disabled>▶ Play</button><button id="sound" aria-pressed="true">♫ Sound on</button><button id="restart" disabled aria-label="Restart current game">↻ Restart</button></div>
       <input id="rom-file" type="file" accept=".gb,.gbc" hidden>
-      <p id="message" role="status" aria-live="polite">Your game files stay on your device. Nothing is uploaded.</p>
+      <p id="message" role="status" aria-live="polite">Choose a ready-to-play game below, or load a file from your device. Your saves stay in this browser.</p>
       <noscript>This player needs JavaScript enabled to run games.</noscript>
     </section>
     <aside>
+      <section id="ready-games" class="panel ready-games"><div class="panel-heading"><h2>Pick a cartridge.</h2><span class="small-badge">READY TO PLAY</span></div><p>Choose a game, then tap Resume. No game file needed. Every game keeps its own saves.</p>
+        <article class="cartridge"><h3>Pokémon Crystal</h3><p>Catch Pokémon and explore Johto.</p><button id="included-game" class="primary" data-included-game="pokemon-crystal">▶ Load Pokémon Crystal</button></article>
+        <article class="cartridge"><h3>Pong <span>FREE</span></h3><p>Move your paddle with Up/Down and beat the computer.</p><button data-included-game="pong">▶ Load Pong</button><p class="credit">By <a href="https://github.com/mdagois/gca">Maximilien Dagois</a> · CC0</p></article>
+        <article class="cartridge"><h3>Minesweep <span>FREE</span></h3><p>Start begins a round. D-pad moves, A flags, B uncovers.</p><button data-included-game="minesweep">▶ Load Minesweep</button><p class="credit">By <a href="https://github.com/mdagois/gca">Maximilien Dagois</a> · CC0</p></article>
+        <article class="cartridge"><h3>ACATTAG <span>FREE DEMO</span></h3><p>A gene-editing puzzle platformer. A jumps, B interacts. Prototype with some synthesis glitches.</p><button data-included-game="acattag">▶ Load ACATTAG</button><p class="credit">By <a href="https://selkkie.itch.io/acattag">Andrea Stewart</a> · MIT</p></article>
+        <p class="fine">Free homebrew games by their credited creators. <a href="games/CREDITS.txt">Credits and licences</a></p>
+      </section>
       <section class="panel saves"><div class="panel-heading"><h2>Pick up where you left off.</h2><span class="small-badge">SAVES</span></div><p>Autosave keeps your latest progress. Quick save gives you a separate point to return to.</p>
         <div class="save-row"><div><strong>Autosave</strong><span id="auto-info">Load a game to get started</span></div><span class="save-dot" aria-hidden="true"></span></div>
         <div class="save-row"><div><strong>Quick save</strong><span id="quick-info">No quick save yet</span></div><span aria-hidden="true">▣</span></div>
         <div class="save-buttons"><button id="quick-save" disabled>Save now</button><button id="quick-load" disabled>Load quick save</button></div>
         <div class="backup-buttons"><button id="export-save" disabled>↓ Export save</button><button id="import-save" disabled>↑ Import save</button></div>
         <input id="save-file" type="file" accept=".json,.rambo-save" hidden>
-        <p class="fine">Saves belong to this browser on this device. Load the same game file next time to resume. Export a backup before clearing browser data or switching devices.</p>
+        <p class="fine">Saves belong to this browser on this device. Open the same game next time to resume. Export a backup before clearing browser data or switching devices.</p>
       </section>
       <section class="panel controls-guide"><div class="panel-heading"><h2>Ready, player one.</h2><span class="small-badge">CONTROLS</span></div><dl><div><dt>Move</dt><dd><kbd>↑ ↓ ← →</kbd> or <kbd>W A S D</kbd></dd></div><div><dt>A / B</dt><dd><kbd>X</kbd> / <kbd>Z</kbd></dd></div><div><dt>Start / Select</dt><dd><kbd>Enter</kbd> / <kbd>Shift</kbd></dd></div><div><dt>Pause</dt><dd><kbd>P</kbd></dd></div></dl><p class="fine">On a phone, use the D-pad and buttons. Slide your thumb across the D-pad for diagonals; hold a direction and an action button together.</p></section>
-      <section class="panel getting-started"><h2>Bring your own cartridge.</h2><p>Choose a Game Boy <strong>.gb</strong> or Game Boy Color <strong>.gbc</strong> file from your computer or phone. Unzip compressed games first.</p><p class="fine">Game Boy Advance (.gba) files aren’t supported. No games are included.</p></section>
+        <section class="panel getting-started"><h2>More games of your own.</h2><p>Use Load game to choose a Game Boy <strong>.gb</strong> or Game Boy Color <strong>.gbc</strong> file from your computer or phone. Unzip compressed games first.</p><p class="fine">Your selected files stay on your device. Game Boy Advance (.gba) files aren’t supported.</p></section>
     </aside>
   </main>
   <footer>Rambo Arcade • Powered by <a href="https://github.com/torch2424/wasmboy">WasmBoy</a> <span>· <a href="assets/gameboy-player/LICENSE.txt">GPL-3.0</a> · <a href="assets/gameboy-player/wasmboy-source.zip">Emulator source</a></span></footer>
-  <script type="module" src="assets/gameboy-player/player.js"></script>
+  <script type="module" src="assets/gameboy-player/player.js?v=library-3"></script>
 </body>
 </html>
